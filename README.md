@@ -128,15 +128,19 @@ Ensures capital preservation, controlled drawdowns, and disciplined trading beha
 
 ---
 
-## Project Architecture
+## Project Architecture  
 
 Below is the overall system architecture of the Futures Risk Toolkit illustrating how user inputs flow through risk calculation modules, stress engine, and margin logic.
-![Project Architecture](./assets/project_architecture.png)
 
-## SPAN Risk Architecture
+![Project Architecture](assets/images/project_architecture.png)
+
+---
+
+## SPAN Risk Architecture  
 
 The following diagram represents the simplified SPAN-style risk flow, showing scenario generation, worst-case loss estimation, spread benefit logic, and final margin requirement computation.
-![SPAN Architecture](./assets/span_architecture.png)
+
+![SPAN Architecture](assets/images/span_architecture.png)
 
 ## Author
 
