@@ -1,4 +1,4 @@
-# Futures Risk Toolkit (FRT)
+# **Futures Risk Toolkit (FRT)**
 
 > A web-based financial risk analytics dashboard for understanding futures exposure, tick-based loss calculation, margin utilization, and stress testing logic.
 
@@ -128,10 +128,15 @@ Ensures capital preservation, controlled drawdowns, and disciplined trading beha
 
 ---
 
-## **Project Architecture**
+## Project Architecture
 
 Below is the overall system architecture of the Futures Risk Toolkit illustrating how user inputs flow through risk calculation modules, stress engine, and margin logic.
-![Project Architecture](./assets/Gemini_Generated_Image_72mq8672mq8672mq.png)
+![Project Architecture](./assets/project_architecture.png)
+
+## SPAN Risk Architecture
+
+The following diagram represents the simplified SPAN-style risk flow, showing scenario generation, worst-case loss estimation, spread benefit logic, and final margin requirement computation.
+![SPAN Architecture](./assets/span_architecture.png)
 
 ## Author
 
