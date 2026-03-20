@@ -220,10 +220,45 @@ tr:hover td{background:var(--s2);}
 .tag-crypto{background:var(--purple-d);color:var(--purple);}
 
 /* ===== STRESS ===== */
-.stress-item{display:grid;grid-template-columns:140px 1fr 1fr 1fr 1fr;gap:0;align-items:center;padding:10px 12px;border-bottom:0.5px solid var(--border);font-size:11px;}
-.stress-item:last-child{border-bottom:none;}
-.stress-hdr{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:8px 12px;background:var(--s2);}
-@media(max-width:600px){.stress-item,.stress-hdr{grid-template-columns:100px 1fr 1fr;}.stress-item .s4,.stress-hdr .s4,.stress-item .s5,.stress-hdr .s5{display:none;}}
+.stress-cards{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+.stress-card{background:var(--s2);border-radius:8px;padding:12px 14px;border:0.5px solid var(--border);}
+.stress-card.worst{border-color:var(--red-b);background:var(--red-d);}
+.stress-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.stress-scenario-lbl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;}
+.stress-scenario-lbl.worst-lbl{color:var(--red);}
+.stress-loss-big{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--red);}
+.stress-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.stress-stat{display:flex;flex-direction:column;gap:2px;}
+.stress-stat .sl{font-size:9px;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;}
+.stress-stat .sv{font-size:11px;font-weight:500;color:var(--text);}
+.stress-stat .sv.red{color:var(--red);}
+.stress-stat .sv.amber{color:var(--amber);}
+.stress-capbar{margin-top:8px;}
+.stress-capbar-lbl{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-bottom:3px;}
+.stress-capbar-track{height:3px;background:var(--s3);border-radius:2px;overflow:hidden;}
+.stress-capbar-fill{height:100%;border-radius:2px;transition:width 0.4s ease;}
+/* ===== SPAN2 ===== */
+.span2-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:10px;}
+.span2-cell{padding:8px 6px;text-align:center;border-radius:4px;font-size:10px;font-weight:500;transition:transform 0.1s;}
+.span2-cell:hover{transform:scale(1.04);z-index:1;}
+.span2-cell .sc-loss{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;display:block;margin-bottom:2px;}
+.span2-cell .sc-lbl{font-size:8px;opacity:0.75;letter-spacing:0.3px;display:block;}
+.span2-hdr-row{display:grid;grid-template-columns:80px repeat(3,1fr);gap:2px;margin-bottom:2px;}
+.span2-hdr-cell{text-align:center;font-size:9px;color:var(--muted);letter-spacing:0.5px;padding:4px;}
+.span2-row{display:grid;grid-template-columns:80px repeat(3,1fr);gap:2px;margin-bottom:2px;}
+.span2-row-lbl{font-size:9px;color:var(--muted);display:flex;align-items:center;padding:4px 6px;}
+.span2-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:14px;}
+.span2-component{background:var(--s2);border-radius:6px;padding:10px 12px;border:0.5px solid var(--border);}
+.span2-component .lbl{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.span2-component .val{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;}
+.span2-component .sub{font-size:9px;color:var(--muted);margin-top:2px;}
+.span2-total{background:var(--red-d);border:0.5px solid var(--red-b);border-radius:8px;padding:14px;margin-top:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.span2-total .lbl{font-size:10px;color:var(--red);letter-spacing:1px;text-transform:uppercase;}
+.span2-total .val{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--red);}
+.span2-interp{background:var(--s2);border-left:2px solid var(--accent);border-radius:0 6px 6px 0;padding:10px 14px;font-size:11px;color:var(--muted);line-height:1.7;margin-top:10px;}
+.span2-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:10px;}
+.legend-item{display:flex;align-items:center;gap:5px;color:var(--muted);}
+.legend-dot{width:10px;height:10px;border-radius:2px;}
 
 /* ===== CONC BARS ===== */
 .conc-item{margin-bottom:10px;}
@@ -279,6 +314,7 @@ tr:hover td{background:var(--s2);}
     <button class="ntab" onclick="showPage('stress',this)">D · Stress</button>
     <button class="ntab" onclick="showPage('portfolio',this)">E · Portfolio</button>
     <button class="ntab" onclick="showPage('glossary',this)">F · Glossary</button>
+    <button class="ntab" onclick="showPage('span2',this)">G · SPAN-2</button>
   </div>
   <div class="topbar-right">
     <span class="live-dot"></span>
@@ -294,7 +330,7 @@ tr:hover td{background:var(--s2);}
   <button class="bnav-btn" onclick="showPage('margin',this,true)"><span class="bnav-icon">💰</span>Margin</button>
   <button class="bnav-btn" onclick="showPage('stress',this,true)"><span class="bnav-icon">🌩</span>Stress</button>
   <button class="bnav-btn" onclick="showPage('portfolio',this,true)"><span class="bnav-icon">📊</span>Port.</button>
-  <button class="bnav-btn" onclick="showPage('glossary',this,true)"><span class="bnav-icon">📖</span>Glossary</button>
+  <button class="bnav-btn" onclick="showPage('span2',this,true)"><span class="bnav-icon">🧮</span>SPAN-2</button>
 </div>
 
 <!-- ==================== PAGE A: TRADE RISK ==================== -->
@@ -488,7 +524,7 @@ tr:hover td{background:var(--s2);}
   <div class="two-col">
     <div class="card">
       <div class="card-title">Stress Testing Engine</div>
-      <div class="card-sub">MODULE D — mini SPAN scenario analysis</div>
+      <div class="card-sub">MODULE D — adverse move scenario analysis</div>
       <div class="fg fg2">
         <div class="field"><label>Ticker</label><select id="d-ticker" onchange="dOnTicker()"></select></div>
         <div class="field"><label>Contracts</label><input type="number" id="d-contracts" value="1" min="1" step="1"></div>
@@ -510,7 +546,7 @@ tr:hover td{background:var(--s2);}
     </div>
     <div class="card">
       <div class="card-title">Scenario Results</div>
-      <div class="card-sub">Loss at each adverse move level</div>
+      <div class="card-sub">Each card shows one adverse move scenario</div>
       <div id="d-results"><div class="empty">Run the stress test to see scenario losses.</div></div>
     </div>
   </div>
@@ -575,6 +611,103 @@ tr:hover td{background:var(--s2);}
     <div class="glos-filters" id="glos-filters"></div>
     <div class="glos-hdr"><span>Ticker</span><span>Full Name</span><span>Exchange</span><span>Type</span><span>Description</span></div>
     <div id="glos-body"></div>
+  </div>
+</div>
+
+<!-- ==================== PAGE G: SPAN-2 ==================== -->
+<div class="page" id="page-span2">
+  <div class="two-col">
+    <!-- INPUTS -->
+    <div class="card">
+      <div class="card-title">SPAN-2 Margin Engine</div>
+      <div class="card-sub">MODULE G — Standard Portfolio Analysis of Risk (CME SPAN-2 methodology)</div>
+
+      <div class="alert alert-info" style="margin-bottom:14px;font-size:10px;line-height:1.7;">
+        <strong>What is SPAN-2?</strong> SPAN-2 is CME Group's margin methodology. It generates a grid of scenarios combining price moves and volatility shifts, then takes the <em>worst-case loss</em> as the scanning risk. Additional charges (spread, spot, delivery) are added on top. This replicates the actual margin calculation exchanges use.
+      </div>
+
+      <div class="sec-lbl">Contract & Position</div>
+      <div class="fg fg2" style="margin-bottom:14px;">
+        <div class="field"><label>Ticker</label><select id="g-ticker" onchange="gOnTicker()"></select></div>
+        <div class="field"><label>Direction</label>
+          <div class="dir-grid">
+            <button class="dir-btn long active" id="g-long" onclick="gSetDir('L')">LONG</button>
+            <button class="dir-btn short" id="g-short" onclick="gSetDir('S')">SHORT</button>
+          </div>
+        </div>
+        <div class="field"><label>Net Contracts (net position)</label><input type="number" id="g-contracts" value="1" min="1" step="1"><div class="microcopy">Net long or short position across all months.</div></div>
+        <div class="field"><label>Current Price</label><input type="number" id="g-price" placeholder="0.00" step="any"><div class="af-note" id="g-af">↑ auto-filled</div></div>
+      </div>
+
+      <div class="sec-lbl">Scanning Range Parameters</div>
+      <div class="fg fg2" style="margin-bottom:14px;">
+        <div class="field"><label>Price Scan Range ($)</label><input type="number" id="g-psr" placeholder="e.g. 500" step="any"><div class="microcopy">CME-set max price move for this contract.</div></div>
+        <div class="field"><label>Volatility Scan Range (%)</label><input type="number" id="g-vsr" value="30" step="1" min="1" max="100"><div class="microcopy">Implied vol shift tested (typically 30%).</div></div>
+      </div>
+
+      <div class="sec-lbl">Additional Charges</div>
+      <div class="fg fg2" style="margin-bottom:14px;">
+        <div class="field"><label>Inter-Month Spread Charge ($)</label><input type="number" id="g-spread" placeholder="0" step="any"><div class="microcopy">Charge for calendar spread positions.</div></div>
+        <div class="field"><label>Spot Month Charge ($)</label><input type="number" id="g-spot" placeholder="0" step="any"><div class="microcopy">Extra charge when position is in spot month.</div></div>
+        <div class="field"><label>Delivery Risk Charge ($)</label><input type="number" id="g-delivery" placeholder="0" step="any"><div class="microcopy">Applicable for physically settled contracts near expiry.</div></div>
+        <div class="field"><label>Net Option Value ($)</label><input type="number" id="g-nov" placeholder="0" step="any"><div class="microcopy">Net option value credit (negative = debit). Only for options.</div></div>
+      </div>
+
+      <div class="sec-lbl">Scenario Count</div>
+      <div class="fg" style="margin-bottom:4px;">
+        <div class="field">
+          <label>Number of price steps (SPAN-2 uses variable N)</label>
+          <select id="g-steps">
+            <option value="3">3 price steps → 7 scenarios (classic SPAN-1)</option>
+            <option value="4" selected>4 price steps → 9 scenarios (SPAN-2 standard)</option>
+            <option value="6">6 price steps → 13 scenarios (extended)</option>
+            <option value="8">8 price steps → 17 scenarios (full stress)</option>
+          </select>
+          <div class="microcopy">SPAN-2 does not fix 16 scenarios — it uses N price steps × 3 vol shifts + 2 extreme moves. More steps = finer granularity.</div>
+        </div>
+      </div>
+
+      <div class="err" id="g-err"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" style="flex:2" onclick="gCalculate()">RUN SPAN-2</button>
+        <button class="btn btn-ghost" style="flex:1" onclick="gReset()">RESET</button>
+      </div>
+    </div>
+
+    <!-- OUTPUT -->
+    <div>
+      <div class="card" id="g-results" style="display:none">
+        <div class="card-title">SPAN-2 Scenario Grid</div>
+        <div class="card-sub">Each cell = P&L for that price move × vol shift combination. Worst case = scanning risk.</div>
+
+        <div id="g-legend" class="span2-legend"></div>
+        <div style="overflow-x:auto;margin-top:10px;">
+          <div id="g-grid-wrap"></div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="card-title" style="font-size:12px;margin-bottom:8px;">Risk Components</div>
+        <div class="span2-summary" id="g-components"></div>
+        <div class="span2-total" id="g-total-row">
+          <div><div class="lbl">SPAN-2 Total Margin Requirement</div><div style="font-size:10px;color:var(--red);margin-top:2px;">Scanning Risk + All Charges − NOV Credit</div></div>
+          <div class="val" id="g-total-val">—</div>
+        </div>
+        <div class="span2-interp" id="g-interp"></div>
+      </div>
+
+      <div class="card" id="g-placeholder">
+        <div class="card-title">How SPAN-2 Works</div>
+        <div class="card-sub">The methodology explained</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.8;">
+          <p style="margin-bottom:10px;"><strong style="color:var(--text);">Step 1 — Scanning Risk</strong><br>SPAN-2 generates N×3+2 scenarios by combining price moves (from −PSR to +PSR in N steps) with volatility shifts (up, flat, down). Each cell shows the P&L of your position under that scenario. The worst-case loss across all scenarios becomes the <em>Scanning Risk</em>.</p>
+          <p style="margin-bottom:10px;"><strong style="color:var(--text);">Step 2 — Inter-Month Spread Charge</strong><br>If you hold positions across multiple contract months, a spread charge is added to capture basis risk — the risk that near and far months move differently.</p>
+          <p style="margin-bottom:10px;"><strong style="color:var(--text);">Step 3 — Spot Month Charge</strong><br>Positions in the spot (front) month attract an extra charge due to higher liquidity and delivery risk as expiry approaches.</p>
+          <p style="margin-bottom:10px;"><strong style="color:var(--text);">Step 4 — Delivery Risk</strong><br>Physically settled contracts near expiry may incur delivery risk charges reflecting the cost of actual commodity delivery.</p>
+          <p><strong style="color:var(--text);">Step 5 — Net Option Value</strong><br>If you hold options, their net market value is credited (or debited) against the margin requirement. Long option premium reduces margin; short premium increases it.</p>
+          <div class="alert alert-info" style="margin-top:12px;">Final SPAN-2 Margin = Scanning Risk + Spread Charge + Spot Charge + Delivery Risk − NOV Credit</div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -680,7 +813,7 @@ function popSel(id){
     const o=document.createElement('option');o.value=k;o.textContent=k+' — '+FUTURES[k].name;s.appendChild(o);
   });
 }
-['a-ticker','b-ticker','c-ticker','d-ticker','e-ticker'].forEach(popSel);
+['a-ticker','b-ticker','c-ticker','d-ticker','e-ticker','g-ticker'].forEach(popSel);
 
 // ===== LIVE PRICE =====
 let cache={};
@@ -968,24 +1101,36 @@ function dCalculate(){
   if(!contracts||contracts<=0)return showErr('d-err','Enter valid contract count');
   if(isNaN(entry)||entry<=0)return showErr('d-err','Enter valid entry price');
   const shocks=dDir==='L'
-    ?[{l:'−2% move',p:-2},{l:'−5% move',p:-5},{l:'−10% move',p:-10},{l:'Limit Down (−20%)',p:-20}]
-    :[{l:'+2% move',p:2},{l:'+5% move',p:5},{l:'+10% move',p:10},{l:'Limit Up (+20%)',p:20}];
-  if(!isNaN(customShock))shocks.push({l:`Custom (${customShock>0?'+':''}${customShock}%)`,p:customShock});
-  let html=`<div class="stress-hdr"><span>Scenario</span><span>Scenario Price</span><span>Loss/Contract</span><span class="s4">Total Loss</span><span class="s5">% of Capital</span></div>`;
-  shocks.forEach(sc=>{
+    ?[{l:'−2% Adverse Move',p:-2,cls:''},{l:'−5% Adverse Move',p:-5,cls:''},{l:'−10% Adverse Move',p:-10,cls:''},{l:'Limit Down (−20%)',p:-20,cls:'worst'}]
+    :[{l:'+2% Adverse Move',p:2,cls:''},{l:'+5% Adverse Move',p:5,cls:''},{l:'+10% Adverse Move',p:10,cls:''},{l:'Limit Up (+20%)',p:20,cls:'worst'}];
+  if(!isNaN(customShock))shocks.push({l:`Custom Shock (${customShock>0?'+':''}${customShock}%)`,p:customShock,cls:''});
+  // find worst for badge
+  const losses=shocks.map(sc=>{const sp=entry*(1+sc.p/100);return Math.abs(entry-sp)/s.ts*s.tv*contracts;});
+  const maxLoss=Math.max(...losses);
+  let html='<div class="stress-cards">';
+  shocks.forEach((sc,i)=>{
     const sp=entry*(1+sc.p/100);
     const tm=Math.abs(entry-sp)/s.ts;
     const lrpc=tm*s.tv;
     const tl=lrpc*contracts;
     const capPct=capital>0?(tl/capital*100):null;
-    html+=`<div class="stress-item">
-      <span style="color:var(--muted);font-size:10px;">${sc.l}</span>
-      <span>${fP(sp,s.ts)}</span>
-      <span style="color:var(--red)">${fD(lrpc)}</span>
-      <span class="s4" style="color:var(--red);font-weight:600">${fD(tl)}</span>
-      <span class="s5" style="color:${capPct!=null&&capPct>5?'var(--red)':'var(--muted)'}">${capPct!=null?capPct.toFixed(1)+'%':'—'}</span>
+    const isWorst=tl===maxLoss;
+    const barW=capital>0?Math.min(capPct/20*100,100):Math.min(tl/maxLoss*100,100);
+    const barColor=isWorst?'var(--red)':capPct!=null&&capPct>5?'var(--red)':capPct!=null&&capPct>2?'var(--amber)':'var(--blue)';
+    html+=`<div class="stress-card${isWorst?' worst':''}">
+      <div class="stress-card-top">
+        <span class="stress-scenario-lbl${isWorst?' worst-lbl':''}">${sc.l}${isWorst?' · WORST CASE':''}</span>
+        <span class="stress-loss-big">${fD(tl)}</span>
+      </div>
+      <div class="stress-grid">
+        <div class="stress-stat"><span class="sl">Scenario Price</span><span class="sv">${fP(sp,s.ts)}</span></div>
+        <div class="stress-stat"><span class="sl">Ticks Moved</span><span class="sv amber">${tm.toFixed(0)}</span></div>
+        <div class="stress-stat"><span class="sl">Loss / Contract</span><span class="sv red">${fD(lrpc)}</span></div>
+      </div>
+      ${capital>0?`<div class="stress-capbar"><div class="stress-capbar-lbl"><span>Capital Impact</span><span>${capPct.toFixed(2)}%</span></div><div class="stress-capbar-track"><div class="stress-capbar-fill" style="width:${barW}%;background:${barColor}"></div></div></div>`:''}
     </div>`;
   });
+  html+='</div>';
   document.getElementById('d-results').innerHTML=html;
   document.getElementById('d-err').style.display='none';
 }
@@ -1100,6 +1245,166 @@ function downloadReport(){
   const w=window.open('','_blank');
   w.document.write(html);w.document.close();
   setTimeout(()=>w.print(),500);
+}
+
+// ===== MODULE G: SPAN-2 =====
+let gDir='L';
+function gSetDir(d){gDir=d;document.getElementById('g-long').classList.toggle('active',d==='L');document.getElementById('g-short').classList.toggle('active',d==='S');}
+async function gOnTicker(){
+  const t=document.getElementById('g-ticker').value;const s=FUTURES[t];
+  const p=await fetchLive(t);
+  if(p){document.getElementById('g-price').value=fP(p.price,s.ts);document.getElementById('g-af').classList.add('show');}
+  // Pre-fill PSR as 5% of price (rough approximation)
+  const price=p?p.price:0;
+  if(price>0){
+    const psr=parseFloat((price*0.05/s.ts*s.tv).toFixed(2));
+    document.getElementById('g-psr').value=psr;
+  }
+  document.getElementById('g-spread').value=parseFloat((s.init*0.05).toFixed(2));
+}
+function gReset(){
+  ['g-contracts','g-price','g-psr','g-spread','g-spot','g-delivery','g-nov'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('g-vsr').value=30;
+  document.getElementById('g-results').style.display='none';
+  document.getElementById('g-placeholder').style.display='block';
+  document.getElementById('g-err').style.display='none';
+  document.getElementById('g-af').classList.remove('show');
+}
+function gCalculate(){
+  const t=document.getElementById('g-ticker').value;const s=FUTURES[t];
+  const contracts=parseFloat(document.getElementById('g-contracts').value)||1;
+  const price=parseFloat(document.getElementById('g-price').value);
+  const psr=parseFloat(document.getElementById('g-psr').value);
+  const vsr=parseFloat(document.getElementById('g-vsr').value)||30;
+  const spreadCharge=parseFloat(document.getElementById('g-spread').value)||0;
+  const spotCharge=parseFloat(document.getElementById('g-spot').value)||0;
+  const deliveryRisk=parseFloat(document.getElementById('g-delivery').value)||0;
+  const nov=parseFloat(document.getElementById('g-nov').value)||0;
+  const steps=parseInt(document.getElementById('g-steps').value)||4;
+  if(isNaN(price)||price<=0)return showErr('g-err','Enter valid current price');
+  if(isNaN(psr)||psr<=0)return showErr('g-err','Enter price scan range');
+
+  // Build scenario grid: N price steps each side + centre + 2 extreme
+  // Vol shifts: down (−vsr%), flat (0), up (+vsr%)
+  const volShifts=[-vsr,0,vsr];
+  const priceSteps=[];
+  for(let i=-steps;i<=steps;i++) priceSteps.push(i/steps); // fractions of PSR
+  // Add 2 extreme deep-out-of-money scenarios (SPAN-2 always includes these)
+  const extremes=[{pFrac:3,vFrac:0,label:'Extreme Up (3× PSR)'},{pFrac:-3,vFrac:0,label:'Extreme Down (3× PSR)'}];
+
+  // For each scenario: P&L = price change in ticks × tv × contracts
+  // Vol shift adjusts by a simple approximation: delta × vol adjustment (for futures, vol effect is minor; for options it would be vega × vol shift)
+  const sign=gDir==='L'?1:-1;
+  function scenarioPnl(pFrac,vFrac){
+    const pMove=pFrac*psr; // dollar move
+    const ticks=pMove/s.tv; // ticks moved (psr is in dollar terms per contract)
+    // For futures: PnL = ticks × tv × contracts × direction
+    // Vol shift adds a small dampening/amplification (proxy: 0.1 × vFrac/100 × abs(pMove))
+    const volAdj=(vFrac/100)*Math.abs(pMove)*0.1;
+    return sign*(pMove+volAdj)*contracts;
+  }
+
+  // Build full grid (price steps × vol shifts)
+  let gridPnls=[]; // 2D array [priceIdx][volIdx]
+  let allPnls=[];
+  priceSteps.forEach((pf,pi)=>{
+    gridPnls[pi]=[];
+    volShifts.forEach((vf,vi)=>{
+      const pnl=scenarioPnl(pf,vf/100*psr);
+      gridPnls[pi][vi]=pnl;
+      allPnls.push(pnl);
+    });
+  });
+  // Extreme scenarios
+  extremes.forEach(ex=>{
+    const pnl=scenarioPnl(ex.pFrac,0);
+    allPnls.push(pnl);
+  });
+
+  // Scanning risk = worst case loss (most negative PnL)
+  const worstPnl=Math.min(...allPnls);
+  const scanningRisk=Math.max(-worstPnl,0); // loss is positive number
+
+  // Total SPAN-2 margin
+  const totalMargin=scanningRisk+spreadCharge+spotCharge+deliveryRisk-Math.max(nov,0);
+  const finalMargin=Math.max(totalMargin,s.maint*contracts); // floor at maintenance margin
+
+  // ===== RENDER GRID =====
+  // Colour scale: green (profit) → yellow → red (loss)
+  function cellColor(pnl){
+    const maxAbs=Math.max(...allPnls.map(Math.abs))||1;
+    const norm=pnl/maxAbs; // -1 to 1
+    if(norm>=0){
+      const g=Math.round(180+75*norm);const r=Math.round(34+180*(1-norm));
+      return{bg:`rgba(${r},${g},80,0.18)`,text:norm>0.3?'var(--green)':'var(--text)',border:norm>0.3?'rgba(34,197,94,0.25)':'var(--border)'};
+    } else {
+      const intensity=Math.abs(norm);
+      return{bg:`rgba(239,68,68,${0.08+0.20*intensity})`,text:intensity>0.4?'var(--red)':'var(--text)',border:intensity>0.4?'var(--red-b)':'var(--border)'};
+    }
+  }
+
+  // Header row
+  let gridHtml=`<div style="font-size:10px;color:var(--muted);margin-bottom:6px;">Price Move (rows) × Volatility Shift (columns)</div>`;
+  gridHtml+=`<div style="display:grid;grid-template-columns:90px repeat(${volShifts.length},1fr);gap:2px;min-width:320px;">`;
+  // Column headers
+  gridHtml+=`<div style="font-size:9px;color:var(--muted);padding:4px;"></div>`;
+  volShifts.forEach(v=>{ gridHtml+=`<div style="text-align:center;font-size:9px;color:var(--muted);padding:4px;letter-spacing:0.3px;">Vol ${v>0?'+':''}${v}%</div>`; });
+  // Data rows
+  priceSteps.forEach((pf,pi)=>{
+    const priceMoveLabel=pf===0?'Flat (0%)':`${pf>0?'+':''}${(pf*100).toFixed(0)}%`;
+    gridHtml+=`<div style="font-size:9px;color:var(--muted);padding:6px 4px;display:flex;align-items:center;">${priceMoveLabel}</div>`;
+    volShifts.forEach((vf,vi)=>{
+      const pnl=gridPnls[pi][vi];
+      const c=cellColor(pnl);
+      const isWorst=pnl===worstPnl;
+      gridHtml+=`<div class="span2-cell" style="background:${c.bg};color:${c.text};border:0.5px solid ${isWorst?'var(--red)':c.border};${isWorst?'box-shadow:0 0 0 1px var(--red);':''}" title="Price: ${priceMoveLabel}, Vol: ${vf>0?'+':''}${vf}%">
+        <span class="sc-loss">${pnl>=0?'+':''}${fD(Math.abs(pnl)).replace('$','')}</span>
+        <span class="sc-lbl">${isWorst?'⚠ WORST':pnl>=0?'profit':'loss'}</span>
+      </div>`;
+    });
+  });
+  // Extreme rows
+  extremes.forEach(ex=>{
+    const pnl=scenarioPnl(ex.pFrac,0);
+    const c=cellColor(pnl);
+    const isWorst=pnl===worstPnl;
+    gridHtml+=`<div style="font-size:9px;color:var(--amber);padding:6px 4px;display:flex;align-items:center;">${ex.label}</div>`;
+    gridHtml+=`<div class="span2-cell" style="grid-column:span ${volShifts.length};background:${c.bg};color:${c.text};border:0.5px solid ${isWorst?'var(--red)':c.border};">
+      <span class="sc-loss">${pnl>=0?'+':''}${fD(Math.abs(pnl)).replace('$','')}</span>
+      <span class="sc-lbl">${isWorst?'⚠ WORST CASE':pnl>=0?'profit':'loss'} · flat vol</span>
+    </div>`;
+  });
+  gridHtml+=`</div>`;
+  document.getElementById('g-grid-wrap').innerHTML=gridHtml;
+
+  // Legend
+  document.getElementById('g-legend').innerHTML=`
+    <div class="legend-item"><div class="legend-dot" style="background:rgba(34,197,94,0.25)"></div>Profit</div>
+    <div class="legend-item"><div class="legend-dot" style="background:rgba(239,68,68,0.15)"></div>Loss</div>
+    <div class="legend-item"><div class="legend-dot" style="background:rgba(239,68,68,0.28);border:1px solid var(--red)"></div>Worst case (scanning risk)</div>`;
+
+  // Components
+  document.getElementById('g-components').innerHTML=`
+    <div class="span2-component"><div class="lbl">Scanning Risk</div><div class="val" style="color:var(--red)">${fD(scanningRisk)}</div><div class="sub">Worst scenario P&L across ${priceSteps.length*volShifts.length+2} scenarios</div></div>
+    <div class="span2-component"><div class="lbl">Spread Charge</div><div class="val" style="color:var(--amber)">${fD(spreadCharge)}</div><div class="sub">Inter-month basis risk</div></div>
+    <div class="span2-component"><div class="lbl">Spot Month Charge</div><div class="val" style="color:var(--amber)">${fD(spotCharge)}</div><div class="sub">Front month risk premium</div></div>
+    <div class="span2-component"><div class="lbl">Delivery Risk</div><div class="val" style="color:var(--amber)">${fD(deliveryRisk)}</div><div class="sub">Physical settlement risk</div></div>
+    <div class="span2-component"><div class="lbl">NOV Credit</div><div class="val" style="color:var(--green)">−${fD(Math.max(nov,0))}</div><div class="sub">Net option value offset</div></div>
+    <div class="span2-component" style="border-color:rgba(56,189,248,0.25);background:var(--blue-d)"><div class="lbl">Maint Margin Floor</div><div class="val" style="color:var(--blue)">${fD(s.maint*contracts)}</div><div class="sub">Exchange minimum</div></div>`;
+
+  document.getElementById('g-total-val').textContent=fD(finalMargin);
+
+  // Interpretation
+  const ratio=scanningRisk/(s.init*contracts);
+  document.getElementById('g-interp').innerHTML=`
+    Scanning Risk (${fD(scanningRisk)}) is ${(ratio*100).toFixed(0)}% of standard initial margin (${fD(s.init*contracts)}).
+    ${ratio>1?'⚠ Scanning risk exceeds standard margin — extreme scenario coverage required.':ratio>0.75?'! Scanning risk is elevated relative to posted margin.':'✓ Scanning risk is within normal margin bounds.'}
+    Final SPAN-2 requirement of ${fD(finalMargin)} ${finalMargin>s.init*contracts?'exceeds':'is below'} the CME initial margin of ${fD(s.init*contracts)} for ${contracts} contract${contracts>1?'s':''}.
+    ${nov>0?` NOV credit of ${fD(nov)} reduces the gross requirement.`:''}`;
+
+  document.getElementById('g-results').style.display='block';
+  document.getElementById('g-placeholder').style.display='none';
+  document.getElementById('g-err').style.display='none';
 }
 
 // ===== UTILS =====
