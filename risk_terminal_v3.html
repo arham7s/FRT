@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Futures Risk Terminal</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ===== THEME VARIABLES ===== */
+[data-theme="dark"] {
+  --bg: #0a0c0f; --s1: #0f1318; --s2: #161b22; --s3: #1c232c; --s4: #232b36;
+  --border: rgba(255,255,255,0.06); --border2: rgba(255,255,255,0.10); --border3: rgba(255,255,255,0.18);
+  --text: #e8e4dd; --muted: #7a8694; --hint: #2e3842; --textinv: #0a0c0f;
+  --accent: #c8f135; --accent-d: rgba(200,241,53,0.10); --accent-d2: rgba(200,241,53,0.05);
+  --green: #22c55e; --green-d: rgba(34,197,94,0.12); --green-b: rgba(34,197,94,0.25);
+  --red: #ef4444; --red-d: rgba(239,68,68,0.12); --red-b: rgba(239,68,68,0.25);
+  --blue: #38bdf8; --blue-d: rgba(56,189,248,0.12);
+  --amber: #fbbf24; --amber-d: rgba(251,191,36,0.12);
+  --purple: #a78bfa; --purple-d: rgba(167,139,250,0.12);
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  --hero-grad: linear-gradient(135deg, #0f1318 0%, #0d1a0a 50%, #0a0c0f 100%);
+}
+[data-theme="light"] {
+  --bg: #f0f4f8; --s1: #ffffff; --s2: #f7f9fc; --s3: #eef2f7; --s4: #e4eaf2;
+  --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.12); --border3: rgba(0,0,0,0.20);
+  --text: #0f172a; --muted: #64748b; --hint: #cbd5e1; --textinv: #ffffff;
+  --accent: #16a34a; --accent-d: rgba(22,163,74,0.10); --accent-d2: rgba(22,163,74,0.05);
+  --green: #16a34a; --green-d: rgba(22,163,74,0.10); --green-b: rgba(22,163,74,0.25);
+  --red: #dc2626; --red-d: rgba(220,38,38,0.10); --red-b: rgba(220,38,38,0.25);
+  --blue: #1565c0; --blue-d: rgba(21,101,192,0.10);
+  --amber: #b45309; --amber-d: rgba(180,83,9,0.10);
+  --purple: #7c3aed; --purple-d: rgba(124,58,237,0.10);
+  --card-shadow: 0 1px 4px rgba(0,0,0,0.10);
+  --hero-grad: linear-gradient(135deg, #e8f5e9 0%, #e3f2fd 50%, #f0f4f8 100%);
+}
+
+/* ===== RESET & BASE ===== */
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
+body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;transition:background 0.3s,color 0.3s;}
+
+/* ===== TOPBAR ===== */
+.topbar{position:sticky;top:0;z-index:200;background:var(--s1);border-bottom:0.5px solid var(--border2);display:flex;align-items:center;padding:0 16px;height:52px;gap:12px;}
+.brand{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--accent);letter-spacing:0.5px;white-space:nowrap;}
+.nav-scroll{flex:1;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.nav-scroll::-webkit-scrollbar{display:none;}
+.ntab{padding:6px 12px;font-size:10px;font-weight:500;letter-spacing:0.5px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-radius:5px;white-space:nowrap;transition:all 0.15s;font-family:'JetBrains Mono',monospace;}
+.ntab:hover{color:var(--text);background:var(--s3);}
+.ntab.active{color:var(--accent);background:var(--accent-d);}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.theme-btn{width:34px;height:20px;border-radius:10px;border:0.5px solid var(--border2);background:var(--s3);cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0;}
+.theme-btn::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--accent);transition:transform 0.2s;}
+[data-theme="light"] .theme-btn::after{transform:translateX(14px);}
+.theme-lbl{font-size:9px;color:var(--muted);letter-spacing:0.5px;display:none;}
+@media(min-width:480px){.theme-lbl{display:block;}}
+
+/* ===== PAGES ===== */
+.page{display:none;padding:16px;max-width:1200px;margin:0 auto;}
+.page.active{display:block;animation:fadeUp 0.25s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+/* ===== HERO ===== */
+.hero{background:var(--hero-grad);border:0.5px solid var(--border);border-radius:12px;padding:28px 24px 24px;margin-bottom:16px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:var(--accent-d2);pointer-events:none;}
+.hero-badge-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.hero-badge{font-size:9px;font-weight:500;padding:3px 10px;border-radius:20px;letter-spacing:0.5px;border:0.5px solid var(--border2);color:var(--muted);background:var(--s2);}
+.hero-badge.active-b{background:var(--accent-d);color:var(--accent);border-color:rgba(200,241,53,0.2);}
+[data-theme="light"] .hero-badge.active-b{border-color:rgba(22,163,74,0.3);}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(20px,4vw,32px);font-weight:800;color:var(--text);line-height:1.1;margin-bottom:8px;}
+.hero h1 span{color:var(--accent);}
+.hero p{font-size:12px;color:var(--muted);line-height:1.7;max-width:520px;}
+.hero-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-top:18px;}
+.hstat{background:var(--s1);border:0.5px solid var(--border);border-radius:8px;padding:10px 12px;}
+.hstat .lbl{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;}
+.hstat .val{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--accent);}
+
+/* ===== CARDS ===== */
+.card{background:var(--s1);border:0.5px solid var(--border);border-radius:10px;padding:18px 16px;margin-bottom:12px;box-shadow:var(--card-shadow);}
+.card-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.card-sub{font-size:10px;color:var(--muted);letter-spacing:0.3px;margin-bottom:16px;line-height:1.5;}
+.sec-lbl{font-size:9px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;margin-top:4px;}
+.microcopy{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.5;font-style:italic;}
+
+/* ===== 3-COL LAYOUT ===== */
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.sidebar-layout{display:grid;grid-template-columns:340px 1fr;gap:12px;align-items:start;}
+@media(max-width:900px){.three-col{grid-template-columns:1fr 1fr;}.sidebar-layout{grid-template-columns:1fr;}}
+@media(max-width:600px){.three-col,.two-col{grid-template-columns:1fr;}.sidebar-layout{grid-template-columns:1fr;}}
+
+/* ===== FORM ===== */
+.fg{display:grid;gap:10px;}
+.fg2{grid-template-columns:1fr 1fr;}
+.fg3{grid-template-columns:1fr 1fr 1fr;}
+@media(max-width:500px){.fg2,.fg3{grid-template-columns:1fr;}}
+.field{display:flex;flex-direction:column;gap:4px;}
+.field label{font-size:10px;color:var(--muted);letter-spacing:0.3px;}
+.field input,.field select{height:38px;background:var(--s2);border:0.5px solid var(--border2);border-radius:6px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;padding:0 10px;outline:none;transition:border-color 0.15s,box-shadow 0.15s;width:100%;-webkit-appearance:none;}
+.field input:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-d);}
+.field input::placeholder{color:var(--hint);}
+.field select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a8694' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
+.field select option{background:var(--s2);color:var(--text);}
+.af-note{font-size:10px;color:var(--accent);margin-top:2px;opacity:0;transition:opacity 0.2s;}
+.af-note.show{opacity:1;}
+
+/* ===== BUTTONS ===== */
+.btn{height:40px;padding:0 18px;border:none;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.5px;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.btn-primary{background:var(--accent);color:var(--textinv);}
+.btn-primary:hover{opacity:0.88;transform:translateY(-1px);}
+.btn-ghost{background:transparent;border:0.5px solid var(--border2);color:var(--muted);}
+.btn-ghost:hover{background:var(--s3);color:var(--text);}
+.btn-danger{background:var(--red-d);border:0.5px solid var(--red-b);color:var(--red);}
+.btn-row{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
+.btn-full{width:100%;}
+
+/* ===== DIRECTION ===== */
+.dir-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.dir-btn{height:38px;border-radius:6px;border:0.5px solid var(--border2);background:transparent;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:1px;color:var(--muted);cursor:pointer;transition:all 0.15s;}
+.dir-btn.long.active{background:var(--green-d);color:var(--green);border-color:var(--green-b);}
+.dir-btn.short.active{background:var(--red-d);color:var(--red);border-color:var(--red-b);}
+
+/* ===== TOGGLE ===== */
+.mode-toggle{display:flex;gap:3px;background:var(--s2);border-radius:6px;padding:3px;margin-bottom:14px;width:100%;}
+.mode-btn{flex:1;padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;letter-spacing:0.3px;border:none;border-radius:4px;background:transparent;color:var(--muted);cursor:pointer;transition:all 0.15s;}
+.mode-btn.active{background:var(--accent-d);color:var(--accent);}
+
+/* ===== METRICS ===== */
+.metric{background:var(--s2);border-radius:8px;padding:14px 12px;}
+.metric .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.metric .val{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--text);line-height:1;}
+.metric .sub{font-size:10px;color:var(--muted);margin-top:4px;}
+.metric.m-red{border:0.5px solid var(--red-b);background:var(--red-d);}.metric.m-red .val{color:var(--red);}
+.metric.m-green{border:0.5px solid var(--green-b);background:var(--green-d);}.metric.m-green .val{color:var(--green);}
+.metric.m-blue{border:0.5px solid rgba(56,189,248,0.25);background:var(--blue-d);}.metric.m-blue .val{color:var(--blue);}
+[data-theme="light"] .metric.m-blue{border-color:rgba(21,101,192,0.25);}
+.metric.m-accent{border:0.5px solid rgba(200,241,53,0.2);background:var(--accent-d2);}.metric.m-accent .val{color:var(--accent);}
+[data-theme="light"] .metric.m-accent{border-color:rgba(22,163,74,0.25);}
+.metric.m-amber{border:0.5px solid rgba(251,191,36,0.25);background:var(--amber-d);}.metric.m-amber .val{color:var(--amber);}
+.rg2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.rg4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;}
+@media(max-width:500px){.rg4{grid-template-columns:1fr 1fr;}}
+
+/* ===== RISK METER ===== */
+.risk-meter{margin:14px 0;}
+.risk-meter-label{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:6px;}
+.risk-track{height:8px;background:var(--s3);border-radius:4px;overflow:hidden;position:relative;}
+.risk-fill{height:100%;border-radius:4px;transition:width 0.6s ease,background 0.3s;}
+.risk-badge{display:inline-block;font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;margin-top:6px;letter-spacing:0.5px;}
+.risk-low{background:var(--green-d);color:var(--green);}
+.risk-mod{background:var(--amber-d);color:var(--amber);}
+.risk-high{background:var(--red-d);color:var(--red);}
+
+/* ===== ALERTS ===== */
+.alert{border-radius:8px;padding:10px 14px;font-size:11px;line-height:1.6;margin-top:10px;border:0.5px solid transparent;}
+.alert-warn{background:var(--amber-d);color:var(--amber);border-color:rgba(251,191,36,0.2);}
+.alert-danger{background:var(--red-d);color:var(--red);border-color:var(--red-b);}
+.alert-ok{background:var(--green-d);color:var(--green);border-color:var(--green-b);}
+.alert-info{background:var(--blue-d);color:var(--blue);border-color:rgba(56,189,248,0.2);}
+[data-theme="light"] .alert-info{border-color:rgba(21,101,192,0.2);}
+.interp{background:var(--s2);border-left:2px solid var(--accent);border-radius:0 6px 6px 0;padding:10px 14px;font-size:11px;color:var(--muted);line-height:1.7;margin-top:10px;}
+
+/* ===== DIVIDER ===== */
+.divider{height:0.5px;background:var(--border);margin:14px 0;}
+
+/* ===== PRICE CARD ===== */
+.price-strip{background:var(--s2);border-radius:8px;padding:12px 14px;margin-bottom:12px;border:0.5px solid var(--border);}
+.price-strip-top{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
+.price-big{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--text);}
+.pill{display:inline-block;font-size:10px;font-weight:500;padding:3px 8px;border-radius:20px;}
+.pill-up{background:var(--green-d);color:var(--green);}
+.pill-down{background:var(--red-d);color:var(--red);}
+.pill-flat{background:var(--s3);color:var(--muted);}
+.price-stats{display:flex;gap:16px;flex-wrap:wrap;}
+.pst .lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
+.pst .val{font-size:12px;font-weight:500;}
+.pst .val.hi{color:var(--green);}.pst .val.lo{color:var(--red);}
+.tchips{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+.tchip{font-size:10px;padding:3px 8px;border-radius:4px;background:var(--accent-d2);color:var(--accent);border:0.5px solid rgba(200,241,53,0.12);}
+[data-theme="light"] .tchip{border-color:rgba(22,163,74,0.2);}
+
+/* ===== SPEC PANEL ===== */
+.spec-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px;}
+.spec-row{display:contents;}
+.spec-lbl{color:var(--muted);}
+.spec-val{color:var(--text);font-weight:500;}
+.spec-desc{font-size:10px;color:var(--muted);line-height:1.6;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border);}
+
+/* ===== CHART ===== */
+.chart-wrap{position:relative;height:220px;margin-top:12px;}
+@media(min-width:700px){.chart-wrap{height:260px;}}
+
+/* ===== RATIO BAR ===== */
+.rbar-wrap{margin:10px 0;}
+.rbar-lbl{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:5px;}
+.rbar-track{height:6px;background:var(--s3);border-radius:3px;overflow:hidden;}
+.rbar-fill{height:100%;border-radius:3px;transition:width 0.5s ease;}
+
+/* ===== TABLE ===== */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:10px;}
+table{width:100%;border-collapse:collapse;font-size:11px;min-width:500px;}
+thead tr{border-bottom:0.5px solid var(--border2);}
+th{text-align:left;padding:8px 10px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:500;white-space:nowrap;}
+td{padding:10px;color:var(--text);border-bottom:0.5px solid var(--border);white-space:nowrap;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--s2);}
+.td-r{text-align:right;}
+.tag{display:inline-block;font-size:9px;padding:2px 7px;border-radius:3px;font-weight:500;letter-spacing:0.3px;}
+.tag-long{background:var(--green-d);color:var(--green);}
+.tag-short{background:var(--red-d);color:var(--red);}
+.tag-equity{background:var(--blue-d);color:var(--blue);}
+.tag-energy{background:var(--amber-d);color:var(--amber);}
+.tag-metal{background:var(--purple-d);color:var(--purple);}
+.tag-fx{background:var(--green-d);color:var(--green);}
+.tag-rates{background:var(--red-d);color:#fca5a5;}
+.tag-ag{background:rgba(251,191,36,0.08);color:#fcd34d;}
+.tag-soft{background:var(--accent-d2);color:var(--accent);}
+.tag-crypto{background:var(--purple-d);color:var(--purple);}
+
+/* ===== STRESS ===== */
+.stress-cards{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+.stress-card{background:var(--s2);border-radius:8px;padding:12px 14px;border:0.5px solid var(--border);}
+.stress-card.worst{border-color:var(--red-b);background:var(--red-d);}
+.stress-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.stress-scenario-lbl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;}
+.stress-scenario-lbl.worst-lbl{color:var(--red);}
+.stress-loss-big{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--red);}
+.stress-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.stress-stat{display:flex;flex-direction:column;gap:2px;}
+.stress-stat .sl{font-size:9px;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;}
+.stress-stat .sv{font-size:11px;font-weight:500;color:var(--text);}
+.stress-stat .sv.red{color:var(--red);}
+.stress-stat .sv.amber{color:var(--amber);}
+.stress-capbar{margin-top:8px;}
+.stress-capbar-lbl{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-bottom:3px;}
+.stress-capbar-track{height:3px;background:var(--s3);border-radius:2px;overflow:hidden;}
+.stress-capbar-fill{height:100%;border-radius:2px;transition:width 0.4s ease;}
+/* ===== SPAN2 ===== */
+.span2-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:10px;}
+.span2-cell{padding:8px 6px;text-align:center;border-radius:4px;font-size:10px;font-weight:500;transition:transform 0.1s;}
+.span2-cell:hover{transform:scale(1.04);z-index:1;}
+.span2-cell .sc-loss{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;display:block;margin-bottom:2px;}
+.span2-cell .sc-lbl{font-size:8px;opacity:0.75;letter-spacing:0.3px;display:block;}
+.span2-hdr-row{display:grid;grid-template-columns:80px repeat(3,1fr);gap:2px;margin-bottom:2px;}
+.span2-hdr-cell{text-align:center;font-size:9px;color:var(--muted);letter-spacing:0.5px;padding:4px;}
+.span2-row{display:grid;grid-template-columns:80px repeat(3,1fr);gap:2px;margin-bottom:2px;}
+.span2-row-lbl{font-size:9px;color:var(--muted);display:flex;align-items:center;padding:4px 6px;}
+.span2-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:14px;}
+.span2-component{background:var(--s2);border-radius:6px;padding:10px 12px;border:0.5px solid var(--border);}
+.span2-component .lbl{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.span2-component .val{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;}
+.span2-component .sub{font-size:9px;color:var(--muted);margin-top:2px;}
+.span2-total{background:var(--red-d);border:0.5px solid var(--red-b);border-radius:8px;padding:14px;margin-top:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.span2-total .lbl{font-size:10px;color:var(--red);letter-spacing:1px;text-transform:uppercase;}
+.span2-total .val{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--red);}
+.span2-interp{background:var(--s2);border-left:2px solid var(--accent);border-radius:0 6px 6px 0;padding:10px 14px;font-size:11px;color:var(--muted);line-height:1.7;margin-top:10px;}
+.span2-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:10px;}
+.legend-item{display:flex;align-items:center;gap:5px;color:var(--muted);}
+.legend-dot{width:10px;height:10px;border-radius:2px;}
+
+/* ===== CONC BARS ===== */
+.conc-item{margin-bottom:10px;}
+.conc-lbl{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;}
+.conc-bar{height:4px;background:var(--s3);border-radius:2px;overflow:hidden;}
+.conc-fill{height:100%;border-radius:2px;background:var(--accent);}
+
+/* ===== GLOSSARY ===== */
+.glos-search{width:100%;height:40px;background:var(--s2);border:0.5px solid var(--border2);border-radius:6px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;padding:0 14px;outline:none;margin-bottom:12px;}
+.glos-search:focus{border-color:var(--accent);}
+.glos-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.gf-btn{padding:4px 12px;font-size:10px;border-radius:20px;border:0.5px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all 0.15s;}
+.gf-btn.active{background:var(--accent-d);color:var(--accent);border-color:rgba(200,241,53,0.2);}
+[data-theme="light"] .gf-btn.active{border-color:rgba(22,163,74,0.25);}
+.glos-hdr{display:grid;grid-template-columns:70px 180px 80px 90px 1fr;gap:0;padding:8px 14px;background:var(--s2);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);position:sticky;top:52px;}
+.glos-row{display:grid;grid-template-columns:70px 180px 80px 90px 1fr;gap:0;padding:12px 14px;border-bottom:0.5px solid var(--border);font-size:11px;transition:background 0.1s;}
+.glos-row:hover{background:var(--s2);}
+.glos-ticker{font-weight:600;color:var(--accent);font-size:13px;}
+.glos-name{color:var(--text);font-weight:500;}
+.glos-desc{color:var(--muted);font-size:10px;line-height:1.5;}
+@media(max-width:700px){.glos-hdr,.glos-row{grid-template-columns:60px 1fr;}.glos-hdr span:nth-child(n+3),.glos-row span:nth-child(n+3){display:none;}}
+
+/* ===== EMPTY STATE ===== */
+.empty{text-align:center;padding:32px 16px;color:var(--muted);font-size:12px;}
+
+/* ===== SPIN ===== */
+.spin{display:inline-block;width:12px;height:12px;border:1.5px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ===== ERR ===== */
+.err{font-size:11px;color:var(--red);margin-top:8px;display:none;}
+
+/* ===== FOOTER ===== */
+.footer{text-align:center;padding:32px 16px;font-size:10px;color:var(--muted);letter-spacing:0.5px;}
+
+/* ===== MOBILE NAV BOTTOM ===== */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:var(--s1);border-top:0.5px solid var(--border2);padding:8px 4px env(safe-area-inset-bottom);gap:2px;}
+@media(max-width:640px){.bottom-nav{display:flex;}.topbar .nav-scroll{display:none;}.page{padding-bottom:80px;}}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.3px;transition:color 0.15s;}
+.bnav-btn.active{color:var(--accent);}
+.bnav-icon{font-size:16px;line-height:1;}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="brand">FRT</div>
+  <div class="nav-scroll">
+    <button class="ntab active" onclick="showPage('trade',this)">A · Trade Risk</button>
+    <button class="ntab" onclick="showPage('sizing',this)">B · Sizing</button>
+    <button class="ntab" onclick="showPage('margin',this)">C · Margin</button>
+    <button class="ntab" onclick="showPage('stress',this)">D · Stress</button>
+    <button class="ntab" onclick="showPage('portfolio',this)">E · Portfolio</button>
+    <button class="ntab" onclick="showPage('glossary',this)">F · Glossary</button>
+    <button class="ntab" onclick="showPage('span2',this)">G · SPAN-2</button>
+  </div>
+  <div class="topbar-right">
+    <span class="live-dot"></span>
+    <span class="theme-lbl" id="theme-lbl">DARK</span>
+    <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme"></button>
+  </div>
+</div>
+
+<!-- BOTTOM NAV (mobile) -->
+<div class="bottom-nav">
+  <button class="bnav-btn active" onclick="showPage('trade',this,true)"><span class="bnav-icon">⚡</span>Risk</button>
+  <button class="bnav-btn" onclick="showPage('sizing',this,true)"><span class="bnav-icon">📐</span>Size</button>
+  <button class="bnav-btn" onclick="showPage('margin',this,true)"><span class="bnav-icon">💰</span>Margin</button>
+  <button class="bnav-btn" onclick="showPage('stress',this,true)"><span class="bnav-icon">🌩</span>Stress</button>
+  <button class="bnav-btn" onclick="showPage('portfolio',this,true)"><span class="bnav-icon">📊</span>Port.</button>
+  <button class="bnav-btn" onclick="showPage('span2',this,true)"><span class="bnav-icon">🧮</span>SPAN-2</button>
+</div>
+
+<!-- ==================== PAGE A: TRADE RISK ==================== -->
+<div class="page active" id="page-trade">
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge-row">
+      <span class="hero-badge active-b">Tick Risk</span>
+      <span class="hero-badge active-b">Margin Analysis</span>
+      <span class="hero-badge active-b">Stress Testing</span>
+      <span class="hero-badge active-b">Portfolio Risk</span>
+      <span class="hero-badge">63 Contracts</span>
+      <span class="hero-badge">Live Prices</span>
+    </div>
+    <h1>Futures <span>Risk</span> &<br>Position Sizing Engine</h1>
+    <p>Tick-based loss estimation, margin exposure analysis and stress testing for CME futures. Built for traders and risk analysts.</p>
+    <div class="hero-stats" id="hero-stats">
+      <div class="hstat"><div class="lbl">Ticker</div><div class="val" id="hs-ticker">—</div></div>
+      <div class="hstat"><div class="lbl">Last Price</div><div class="val" id="hs-price">—</div></div>
+      <div class="hstat"><div class="lbl">Trade Risk</div><div class="val" id="hs-risk" style="color:var(--red)">—</div></div>
+      <div class="hstat"><div class="lbl">Contracts OK</div><div class="val" id="hs-contracts" style="color:var(--green)">—</div></div>
+    </div>
+  </div>
+
+  <div class="three-col">
+    <!-- COL 1: INPUTS -->
+    <div class="card">
+      <div class="card-title">Trade Inputs</div>
+      <div class="card-sub">Enter your trade parameters</div>
+      <div class="fg">
+        <div class="field">
+          <label>Ticker</label>
+          <select id="a-ticker" onchange="aOnTicker()"></select>
+        </div>
+        <div class="field">
+          <label>Direction</label>
+          <div class="dir-grid">
+            <button class="dir-btn long active" id="a-long" onclick="aSetDir('L')">LONG</button>
+            <button class="dir-btn short" id="a-short" onclick="aSetDir('S')">SHORT</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Number of Contracts</label>
+          <input type="number" id="a-contracts" value="1" min="1" step="1">
+        </div>
+        <div class="field">
+          <label>Entry Price</label>
+          <input type="number" id="a-entry" placeholder="0.00" step="any">
+          <div class="af-note" id="a-af">↑ auto-filled from live price</div>
+          <div class="microcopy">Your intended trade entry price.</div>
+        </div>
+        <div class="field">
+          <label>Stop Loss Price</label>
+          <input type="number" id="a-stop" placeholder="0.00" step="any">
+          <div class="microcopy">Stop loss defines your maximum theoretical loss.</div>
+        </div>
+        <div class="field">
+          <label>Account Capital ($)</label>
+          <input type="number" id="a-capital" placeholder="100000" step="any">
+          <div class="microcopy">Used to calculate % of capital at risk.</div>
+        </div>
+        <div class="field">
+          <label>Profit Target (optional)</label>
+          <input type="number" id="a-target" placeholder="0.00" step="any">
+        </div>
+      </div>
+      <div class="err" id="a-err"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary btn-full" onclick="aCalculate()">CALCULATE RISK</button>
+      </div>
+      <div class="btn-row" style="margin-top:6px;">
+        <button class="btn btn-ghost" style="flex:1" onclick="aReset()">RESET</button>
+        <button class="btn btn-ghost" style="flex:1" onclick="downloadReport()">EXPORT PDF</button>
+      </div>
+    </div>
+
+    <!-- COL 2: CONTRACT SPECS -->
+    <div class="card">
+      <div class="card-title">Contract Specs</div>
+      <div class="card-sub">Live data + contract details</div>
+      <div id="a-price-area">
+        <div style="font-size:11px;color:var(--muted);">Select a ticker to load live price and specs.</div>
+      </div>
+    </div>
+
+    <!-- COL 3: RISK OUTPUT -->
+    <div class="card" id="a-output-card">
+      <div class="card-title">Risk Output</div>
+      <div class="card-sub">Tick-accurate position risk</div>
+      <div id="a-results-area">
+        <div style="font-size:11px;color:var(--muted);">Results will appear here after calculation.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- P&L CHART -->
+  <div class="card" id="a-chart-card" style="display:none">
+    <div class="card-title">P&L Sensitivity Chart</div>
+    <div class="card-sub">Price movement vs unrealised P&L across scenarios</div>
+    <div class="chart-wrap"><canvas id="a-chart"></canvas></div>
+  </div>
+</div>
+
+<!-- ==================== PAGE B: POSITION SIZING ==================== -->
+<div class="page" id="page-sizing">
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Position Sizing Engine</div>
+      <div class="card-sub">MODULE B — how many contracts can you trade?</div>
+      <div class="fg fg2">
+        <div class="field"><label>Ticker</label><select id="b-ticker" onchange="bOnTicker()"></select></div>
+        <div class="field"><label>Account Capital ($)</label><input type="number" id="b-capital" placeholder="100000" step="any"></div>
+        <div class="field"><label>Max Risk % per Trade</label><input type="number" id="b-riskpct" placeholder="1.0" step="0.1" min="0.1" max="10"><div class="microcopy">Industry standard: 1–2% per trade.</div></div>
+        <div class="field"><label>Entry Price</label><input type="number" id="b-entry" placeholder="0.00" step="any"><div class="af-note" id="b-af">↑ auto-filled</div></div>
+        <div class="field"><label>Stop Loss Price</label><input type="number" id="b-stop" placeholder="0.00" step="any"><div class="microcopy">Stop loss defines max loss per contract.</div></div>
+        <div class="field"><label>Direction</label>
+          <div class="dir-grid">
+            <button class="dir-btn long active" id="b-long" onclick="bSetDir('L')">LONG</button>
+            <button class="dir-btn short" id="b-short" onclick="bSetDir('S')">SHORT</button>
+          </div>
+        </div>
+      </div>
+      <div class="err" id="b-err"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" style="flex:2" onclick="bCalculate()">CALCULATE SIZE</button>
+        <button class="btn btn-ghost" style="flex:1" onclick="bReset()">RESET</button>
+      </div>
+    </div>
+    <div class="card" id="b-results" style="display:none">
+      <div class="card-title">Sizing Output</div>
+      <div class="card-sub">Optimal contract count for your risk budget</div>
+      <div class="rg2">
+        <div class="metric m-accent"><div class="lbl">Contracts Allowed</div><div class="val" id="bs-c">—</div></div>
+        <div class="metric m-blue"><div class="lbl">Allowed Risk ($)</div><div class="val" id="bs-a">—</div></div>
+        <div class="metric m-red"><div class="lbl">Actual Risk Used</div><div class="val" id="bs-u">—</div></div>
+        <div class="metric m-green"><div class="lbl">Remaining Buffer</div><div class="val" id="bs-b">—</div></div>
+      </div>
+      <div class="divider"></div>
+      <div class="rg2">
+        <div class="metric"><div class="lbl">Risk per Contract</div><div class="val" id="bs-rpc">—</div></div>
+        <div class="metric"><div class="lbl">Ticks at Risk</div><div class="val" id="bs-t">—</div></div>
+      </div>
+      <div id="bs-interp" class="interp" style="display:none;"></div>
+      <div id="bs-alert" class="alert" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE C: MARGIN ==================== -->
+<div class="page" id="page-margin">
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Margin Comparison Engine</div>
+      <div class="card-sub">MODULE C — can actual loss exceed posted margin?</div>
+      <div class="fg fg2">
+        <div class="field"><label>Ticker</label><select id="c-ticker" onchange="cOnTicker()"></select></div>
+        <div class="field"><label>Contracts</label><input type="number" id="c-contracts" value="1" min="1" step="1"></div>
+        <div class="field"><label>Entry Price</label><input type="number" id="c-entry" placeholder="0.00" step="any"><div class="af-note" id="c-af">↑ auto-filled</div></div>
+        <div class="field"><label>Stop Loss Price</label><input type="number" id="c-stop" placeholder="0.00" step="any"></div>
+        <div class="field"><label>Initial Margin / Contract ($)</label><input type="number" id="c-init" placeholder="0.00" step="any"><div class="microcopy">Margin is collateral, not maximum loss.</div></div>
+        <div class="field"><label>Maintenance Margin / Contract ($)</label><input type="number" id="c-maint" placeholder="0.00" step="any"></div>
+      </div>
+      <div class="err" id="c-err"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" style="flex:2" onclick="cCalculate()">COMPARE</button>
+        <button class="btn btn-ghost" style="flex:1" onclick="cReset()">RESET</button>
+      </div>
+    </div>
+    <div class="card" id="c-results" style="display:none">
+      <div class="card-title">Margin Output</div>
+      <div class="card-sub">Risk vs margin posted</div>
+      <div class="rg2">
+        <div class="metric m-blue"><div class="lbl">Total Initial Margin</div><div class="val" id="cm-i">—</div></div>
+        <div class="metric"><div class="lbl">Total Maint. Margin</div><div class="val" id="cm-m">—</div></div>
+        <div class="metric m-red"><div class="lbl">Total Trade Risk</div><div class="val" id="cm-r">—</div></div>
+        <div class="metric m-amber"><div class="lbl">Risk / Margin Ratio</div><div class="val" id="cm-ratio">—</div></div>
+      </div>
+      <div class="divider"></div>
+      <div class="rbar-wrap">
+        <div class="rbar-lbl"><span>Trade Risk vs Initial Margin</span><span id="cm-bpct">—</span></div>
+        <div class="rbar-track"><div class="rbar-fill" id="cm-bar"></div></div>
+      </div>
+      <div id="cm-verdict" class="alert" style="display:none;"></div>
+      <div id="cm-interp" class="interp" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE D: STRESS TEST ==================== -->
+<div class="page" id="page-stress">
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Stress Testing Engine</div>
+      <div class="card-sub">MODULE D — adverse move scenario analysis</div>
+      <div class="fg fg2">
+        <div class="field"><label>Ticker</label><select id="d-ticker" onchange="dOnTicker()"></select></div>
+        <div class="field"><label>Contracts</label><input type="number" id="d-contracts" value="1" min="1" step="1"></div>
+        <div class="field"><label>Entry Price</label><input type="number" id="d-entry" placeholder="0.00" step="any"><div class="af-note" id="d-af">↑ auto-filled</div></div>
+        <div class="field"><label>Direction</label>
+          <div class="dir-grid">
+            <button class="dir-btn long active" id="d-long" onclick="dSetDir('L')">LONG</button>
+            <button class="dir-btn short" id="d-short" onclick="dSetDir('S')">SHORT</button>
+          </div>
+        </div>
+        <div class="field"><label>Custom Shock % (optional)</label><input type="number" id="d-custom" placeholder="e.g. 7.5" step="0.1"></div>
+        <div class="field"><label>Account Capital ($)</label><input type="number" id="d-capital" placeholder="100000" step="any"></div>
+      </div>
+      <div class="err" id="d-err"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" style="flex:2" onclick="dCalculate()">RUN SCENARIOS</button>
+        <button class="btn btn-ghost" style="flex:1" onclick="dReset()">RESET</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Scenario Results</div>
+      <div class="card-sub">Each card shows one adverse move scenario</div>
+      <div id="d-results"><div class="empty">Run the stress test to see scenario losses.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE E: PORTFOLIO ==================== -->
+<div class="page" id="page-portfolio">
+  <div class="sidebar-layout">
+    <div class="card">
+      <div class="card-title">Add Position</div>
+      <div class="card-sub">MODULE E — build your portfolio one trade at a time</div>
+      <div class="fg fg2">
+        <div class="field"><label>Ticker</label><select id="e-ticker"></select></div>
+        <div class="field"><label>Direction</label>
+          <div class="dir-grid">
+            <button class="dir-btn long active" id="e-long" onclick="eSetDir('L')">LONG</button>
+            <button class="dir-btn short" id="e-short" onclick="eSetDir('S')">SHORT</button>
+          </div>
+        </div>
+        <div class="field"><label>Contracts</label><input type="number" id="e-contracts" value="1" min="1" step="1"></div>
+        <div class="field"><label>Entry Price</label><input type="number" id="e-entry" placeholder="0.00" step="any"></div>
+        <div class="field"><label>Stop Loss Price</label><input type="number" id="e-stop" placeholder="0.00" step="any"></div>
+        <div class="field"><label>Margin / Contract ($)</label><input type="number" id="e-margin" placeholder="auto" step="any"></div>
+      </div>
+      <div class="err" id="e-err"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" style="flex:2" onclick="eAdd()">ADD POSITION</button>
+        <button class="btn btn-danger" style="flex:1" onclick="eClear()">CLEAR ALL</button>
+      </div>
+      <div class="divider"></div>
+      <div class="field"><label>Account Capital ($)</label><input type="number" id="e-capital" placeholder="100000" step="any" oninput="eRefresh()"></div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-title">Portfolio Summary</div>
+        <div class="card-sub">Aggregate risk across all positions</div>
+        <div class="rg4">
+          <div class="metric m-red"><div class="lbl">Total Trade Risk</div><div class="val" id="ep-risk">$0</div></div>
+          <div class="metric m-blue"><div class="lbl">Total Margin Used</div><div class="val" id="ep-margin">$0</div></div>
+          <div class="metric m-amber"><div class="lbl">Largest Position</div><div class="val" id="ep-largest">$0</div></div>
+          <div class="metric"><div class="lbl">Positions</div><div class="val" id="ep-count">0</div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="card-title" style="margin-bottom:8px;font-size:12px;">Concentration by Contract</div>
+        <div id="e-conc"><div class="empty" style="padding:12px 0;">No positions yet.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Positions</div>
+        <div id="e-table"><div class="empty">No positions added yet.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE F: GLOSSARY ==================== -->
+<div class="page" id="page-glossary">
+  <div class="card">
+    <div class="card-title">Contract Glossary</div>
+    <div class="card-sub">Full names, exchanges, tick specs and plain-English descriptions for all 63 futures contracts</div>
+    <input class="glos-search" id="glos-search" placeholder="Search ticker, name, exchange, or keyword…" oninput="glosRender()">
+    <div class="glos-filters" id="glos-filters"></div>
+    <div class="glos-hdr"><span>Ticker</span><span>Full Name</span><span>Exchange</span><span>Type</span><span>Description</span></div>
+    <div id="glos-body"></div>
+  </div>
+</div>
+
+<!-- ==================== PAGE G: SPAN-2 ==================== -->
+<div class="page" id="page-span2">
+  <div class="two-col">
+    <!-- INPUTS -->
+    <div class="card">
+      <div class="card-title">SPAN-2 Margin Engine</div>
+      <div class="card-sub">MODULE G — Standard Portfolio Analysis of Risk (CME SPAN-2 methodology)</div>
+
+      <div class="alert alert-info" style="margin-bottom:14px;font-size:10px;line-height:1.7;">
+        <strong>What is SPAN-2?</strong> SPAN-2 is CME Group's margin methodology. It generates a grid of scenarios combining price moves and volatility shifts, then takes the <em>worst-case loss</em> as the scanning risk. Additional charges (spread, spot, delivery) are added on top. This replicates the actual margin calculation exchanges use.
+      </div>
+
+      <div class="sec-lbl">Contract & Position</div>
+      <div class="fg fg2" style="margin-bottom:14px;">
+        <div class="field"><label>Ticker</label><select id="g-ticker" onchange="gOnTicker()"></select></div>
+        <div class="field"><label>Direction</label>
+          <div class="dir-grid">
+            <button class="dir-btn long active" id="g-long" onclick="gSetDir('L')">LONG</button>
+            <button class="dir-btn short" id="g-short" onclick="gSetDir('S')">SHORT</button>
+          </div>
+        </div>
+        <div class="field"><label>Net Contracts (net position)</label><input type="number" id="g-contracts" value="1" min="1" step="1"><div class="microcopy">Net long or short position across all months.</div></div>
+        <div class="field"><label>Current Price</label><input type="number" id="g-price" placeholder="0.00" step="any"><div class="af-note" id="g-af">↑ auto-filled</div></div>
+      </div>
+
+      <div class="sec-lbl">Scanning Range Parameters</div>
+      <div class="fg fg2" style="margin-bottom:14px;">
+        <div class="field"><label>Price Scan Range ($)</label><input type="number" id="g-psr" placeholder="e.g. 500" step="any"><div class="microcopy">CME-set max price move for this contract.</div></div>
+        <div class="field"><label>Volatility Scan Range (%)</label><input type="number" id="g-vsr" value="30" step="1" min="1" max="100"><div class="microcopy">Implied vol shift tested (typically 30%).</div></div>
+      </div>
+
+      <div class="sec-lbl">Additional Charges</div>
+      <div class="fg fg2" style="margin-bottom:14px;">
+        <div class="field"><label>Inter-Month Spread Charge ($)</label><input type="number" id="g-spread" placeholder="0" step="any"><div class="microcopy">Charge for calendar spread positions.</div></div>
+        <div class="field"><label>Spot Month Charge ($)</label><input type="number" id="g-spot" placeholder="0" step="any"><div class="microcopy">Extra charge when position is in spot month.</div></div>
+        <div class="field"><label>Delivery Risk Charge ($)</label><input type="number" id="g-delivery" placeholder="0" step="any"><div class="microcopy">Applicable for physically settled contracts near expiry.</div></div>
+        <div class="field"><label>Net Option Value ($)</label><input type="number" id="g-nov" placeholder="0" step="any"><div class="microcopy">Net option value credit (negative = debit). Only for options.</div></div>
+      </div>
+
+      <div class="sec-lbl">Scenario Count</div>
+      <div class="fg" style="margin-bottom:4px;">
+        <div class="field">
+          <label>Number of price steps (SPAN-2 uses variable N)</label>
+          <select id="g-steps">
+            <option value="3">3 price steps → 7 scenarios (classic SPAN-1)</option>
+            <option value="4" selected>4 price steps → 9 scenarios (SPAN-2 standard)</option>
+            <option value="6">6 price steps → 13 scenarios (extended)</option>
+            <option value="8">8 price steps → 17 scenarios (full stress)</option>
+          </select>
+          <div class="microcopy">SPAN-2 does not fix 16 scenarios — it uses N price steps × 3 vol shifts + 2 extreme moves. More steps = finer granularity.</div>
+        </div>
+      </div>
+
+      <div class="err" id="g-err"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" style="flex:2" onclick="gCalculate()">RUN SPAN-2</button>
+        <button class="btn btn-ghost" style="flex:1" onclick="gReset()">RESET</button>
+      </div>
+    </div>
+
+    <!-- OUTPUT -->
+    <div>
+      <div class="card" id="g-results" style="display:none">
+        <div class="card-title">SPAN-2 Scenario Grid</div>
+        <div class="card-sub">Each cell = P&L for that price move × vol shift combination. Worst case = scanning risk.</div>
+
+        <div id="g-legend" class="span2-legend"></div>
+        <div style="overflow-x:auto;margin-top:10px;">
+          <div id="g-grid-wrap"></div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="card-title" style="font-size:12px;margin-bottom:8px;">Risk Components</div>
+        <div class="span2-summary" id="g-components"></div>
+        <div class="span2-total" id="g-total-row">
+          <div><div class="lbl">SPAN-2 Total Margin Requirement</div><div style="font-size:10px;color:var(--red);margin-top:2px;">Scanning Risk + All Charges − NOV Credit</div></div>
+          <div class="val" id="g-total-val">—</div>
+        </div>
+        <div class="span2-interp" id="g-interp"></div>
+      </div>
+
+      <div class="card" id="g-placeholder">
+        <div class="card-title">How SPAN-2 Works</div>
+        <div class="card-sub">The methodology explained</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.8;">
+          <p style="margin-bottom:10px;"><strong style="color:var(--text);">Step 1 — Scanning Risk</strong><br>SPAN-2 generates N×3+2 scenarios by combining price moves (from −PSR to +PSR in N steps) with volatility shifts (up, flat, down). Each cell shows the P&L of your position under that scenario. The worst-case loss across all scenarios becomes the <em>Scanning Risk</em>.</p>
+          <p style="margin-bottom:10px;"><strong style="color:var(--text);">Step 2 — Inter-Month Spread Charge</strong><br>If you hold positions across multiple contract months, a spread charge is added to capture basis risk — the risk that near and far months move differently.</p>
+          <p style="margin-bottom:10px;"><strong style="color:var(--text);">Step 3 — Spot Month Charge</strong><br>Positions in the spot (front) month attract an extra charge due to higher liquidity and delivery risk as expiry approaches.</p>
+          <p style="margin-bottom:10px;"><strong style="color:var(--text);">Step 4 — Delivery Risk</strong><br>Physically settled contracts near expiry may incur delivery risk charges reflecting the cost of actual commodity delivery.</p>
+          <p><strong style="color:var(--text);">Step 5 — Net Option Value</strong><br>If you hold options, their net market value is credited (or debited) against the margin requirement. Long option premium reduces margin; short premium increases it.</p>
+          <div class="alert alert-info" style="margin-top:12px;">Final SPAN-2 Margin = Scanning Risk + Spread Charge + Spot Charge + Delivery Risk − NOV Credit</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">FUTURES RISK TERMINAL · STANDALONE · PRICES VIA YAHOO FINANCE · FOR EDUCATIONAL USE</div>
+
+<script>
+// ===== THEME =====
+function toggleTheme(){
+  const t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',t);
+  localStorage.setItem('frt-theme',t);
+  document.getElementById('theme-lbl').textContent=t.toUpperCase();
+  if(pnlChart)pnlChart.destroy(),pnlChart=null;
+}
+(function(){
+  const saved=localStorage.getItem('frt-theme')||'dark';
+  document.documentElement.setAttribute('data-theme',saved);
+  document.getElementById('theme-lbl').textContent=saved.toUpperCase();
+})();
+
+// ===== DATA =====
+const FUTURES={
+  '6A':{ts:0.0001,tv:10,init:2200,maint:2000,name:'Australian Dollar',exch:'CME',type:'FX',desc:'AUD/USD currency futures. Tracks Australian dollar vs US dollar. Popular for commodity-currency exposure.'},
+  '6B':{ts:0.0001,tv:6.25,init:2500,maint:2300,name:'British Pound',exch:'CME',type:'FX',desc:'GBP/USD futures. One of the oldest and most liquid FX futures contracts globally.'},
+  '6C':{ts:0.00005,tv:5,init:1800,maint:1600,name:'Canadian Dollar',exch:'CME',type:'FX',desc:'CAD/USD futures. Often correlated with crude oil prices due to Canada\'s energy exports.'},
+  '6E':{ts:0.00005,tv:6.25,init:2400,maint:2200,name:'Euro FX',exch:'CME',type:'FX',desc:'EUR/USD futures. Most liquid FX futures contract globally. Benchmark for dollar strength.'},
+  '6J':{ts:0.0000005,tv:6.25,init:2000,maint:1800,name:'Japanese Yen',exch:'CME',type:'FX',desc:'JPY/USD futures. Safe-haven currency. Sensitive to Bank of Japan policy and risk sentiment.'},
+  '6L':{ts:0.00005,tv:5,init:1500,maint:1300,name:'Brazilian Real',exch:'CME',type:'FX',desc:'BRL/USD futures. Emerging market currency exposed to commodity prices and political risk.'},
+  '6M':{ts:0.00001,tv:5,init:1600,maint:1400,name:'Mexican Peso',exch:'CME',type:'FX',desc:'MXN/USD futures. Sensitive to US-Mexico trade relations and oil prices.'},
+  '6N':{ts:0.0001,tv:10,init:1900,maint:1700,name:'New Zealand Dollar',exch:'CME',type:'FX',desc:'NZD/USD futures. Commodity and dairy export driven currency.'},
+  '6R':{ts:0.000005,tv:12.5,init:2000,maint:1800,name:'Russian Ruble',exch:'CME',type:'FX',desc:'RUB/USD futures. Sensitive to energy prices and geopolitical risk.'},
+  '6S':{ts:0.0001,tv:12.5,init:5000,maint:4500,name:'Swiss Franc',exch:'CME',type:'FX',desc:'CHF/USD futures. Safe-haven currency. Closely tied to EUR due to Swiss export dependence.'},
+  '6Z':{ts:0.000025,tv:12.5,init:1500,maint:1300,name:'South African Rand',exch:'CME',type:'FX',desc:'ZAR/USD futures. Emerging market currency exposed to gold/platinum exports.'},
+  'BTC':{ts:5,tv:25,init:95000,maint:85000,name:'Bitcoin Futures',exch:'CME',type:'Crypto',desc:'Cash-settled Bitcoin futures. High volatility. Each contract = 5 BTC.'},
+  'BZ':{ts:0.01,tv:10,init:4000,maint:3600,name:'Brent Crude Oil',exch:'NYMEX',type:'Energy',desc:'International crude oil benchmark. Used to price most of world\'s traded oil.'},
+  'CC':{ts:1,tv:11.2,init:2200,maint:2000,name:'Cocoa',exch:'ICE',type:'Soft',desc:'Cocoa bean futures. Main chocolate ingredient. West Africa supply risk drives volatility.'},
+  'CL':{ts:0.01,tv:10,init:5000,maint:4500,name:'Crude Oil WTI',exch:'NYMEX',type:'Energy',desc:'West Texas Intermediate crude. US benchmark oil price. Most traded energy futures globally.'},
+  'CT':{ts:0.01,tv:5,init:1800,maint:1600,name:'Cotton',exch:'ICE',type:'Soft',desc:'Cotton No. 2 futures. Key textile raw material. Weather and US farm policy are major drivers.'},
+  'DC':{ts:0.01,tv:20,init:1200,maint:1000,name:'Class III Milk',exch:'CME',type:'Ag',desc:'Dairy futures used to hedge milk price risk. Priced per hundredweight.'},
+  'DX':{ts:0.005,tv:5,init:2200,maint:2000,name:'US Dollar Index',exch:'ICE',type:'FX',desc:'Measures the dollar vs a basket of 6 major currencies (EUR, JPY, GBP, CAD, SEK, CHF).'},
+  'EH':{ts:0.1,tv:29,init:3500,maint:3200,name:'Ethanol',exch:'CBOT',type:'Energy',desc:'Fuel ethanol futures. Sensitive to corn prices and US renewable fuel policy.'},
+  'EMD':{ts:0.1,tv:10,init:12000,maint:10000,name:'E-mini S&P MidCap 400',exch:'CME',type:'Equity',desc:'Mid-cap US equity index. Tracks 400 mid-sized US companies.'},
+  'ES':{ts:0.25,tv:12.5,init:16000,maint:14500,name:'E-mini S&P 500',exch:'CME',type:'Equity',desc:'Most liquid equity index futures globally. Tracks the S&P 500. Standard institutional benchmark.'},
+  'GC':{ts:0.1,tv:10,init:10000,maint:9000,name:'Gold',exch:'COMEX',type:'Metal',desc:'Gold futures. 100 troy oz per contract. Global safe-haven and inflation hedge.'},
+  'GD':{ts:0.05,tv:12.5,init:800,maint:700,name:'S&P GSCI Index',exch:'CME',type:'Equity',desc:'Broad commodity index futures tracking the S&P GSCI.'},
+  'GE':{ts:0.005,tv:12.5,init:800,maint:700,name:'Eurodollar',exch:'CME',type:'Rates',desc:'Short-term interest rate futures based on 3-month USD LIBOR deposits.'},
+  'GF':{ts:0.00025,tv:12.5,init:1500,maint:1300,name:'Feeder Cattle',exch:'CME',type:'Ag',desc:'Feeder cattle futures. Sensitive to feed grain costs.'},
+  'HE':{ts:0.00025,tv:10,init:2200,maint:2000,name:'Lean Hogs',exch:'CME',type:'Ag',desc:'Cash-settled lean hog futures. Sensitive to pork demand and disease outbreaks.'},
+  'HG':{ts:0.0005,tv:12.5,init:6000,maint:5400,name:'Copper',exch:'COMEX',type:'Metal',desc:'High-grade copper. 25,000 lbs per contract. Strong economic indicator — "Dr. Copper".'},
+  'HO':{ts:0.0001,tv:4.2,init:4500,maint:4000,name:'Heating Oil',exch:'NYMEX',type:'Energy',desc:'No. 2 heating oil futures. Strong seasonal demand in winter months.'},
+  'KC':{ts:0.05,tv:7.5,init:3000,maint:2700,name:'Coffee',exch:'ICE',type:'Soft',desc:'Coffee C futures (Arabica). Brazil and Colombia are largest producers. Weather risk dominant.'},
+  'KE':{ts:0.25,tv:12.5,init:1600,maint:1400,name:'Hard Red Winter Wheat',exch:'KCBT',type:'Ag',desc:'Kansas City hard red winter wheat. Used in bread flour.'},
+  'LBS':{ts:0.1,tv:11,init:1800,maint:1600,name:'Random Length Lumber',exch:'CME',type:'Soft',desc:'Lumber futures. Tied to housing starts and construction. Extremely volatile.'},
+  'LE':{ts:0.00025,tv:10,init:1600,maint:1400,name:'Live Cattle',exch:'CME',type:'Ag',desc:'Live cattle futures. Cash settled against actual cattle price.'},
+  'MES':{ts:0.25,tv:1.25,init:1600,maint:1450,name:'Micro E-mini S&P 500',exch:'CME',type:'Equity',desc:'1/10th size of E-mini S&P 500. Ideal for smaller accounts.'},
+  'MGC':{ts:0.1,tv:1,init:1000,maint:900,name:'Micro Gold',exch:'COMEX',type:'Metal',desc:'1/10th size of Gold futures. 10 troy oz per contract.'},
+  'MNQ':{ts:0.25,tv:0.5,init:2000,maint:1800,name:'Micro E-mini Nasdaq-100',exch:'CME',type:'Equity',desc:'1/10th size of E-mini Nasdaq. Tracks top 100 non-financial NASDAQ companies.'},
+  'MWE':{ts:0.25,tv:12.5,init:900,maint:800,name:'Hard Red Spring Wheat',exch:'MGE',type:'Ag',desc:'Minneapolis spring wheat. Premium protein wheat used in specialty breads.'},
+  'MYM':{ts:1,tv:0.5,init:1000,maint:900,name:'Micro E-mini Dow',exch:'CBOT',type:'Equity',desc:'1/10th size of E-mini Dow. Tracks the 30-stock Dow Jones Industrial Average.'},
+  'NG':{ts:0.001,tv:10,init:3000,maint:2700,name:'Natural Gas',exch:'NYMEX',type:'Energy',desc:'Henry Hub natural gas futures. Extremely volatile. Weather and storage data are key drivers.'},
+  'NQ':{ts:0.25,tv:5,init:20000,maint:18000,name:'E-mini Nasdaq-100',exch:'CME',type:'Equity',desc:'Tracks top 100 non-financial NASDAQ stocks. Dominated by mega-cap tech.'},
+  'OJ':{ts:0.05,tv:7.5,init:1800,maint:1600,name:'Orange Juice',exch:'ICE',type:'Soft',desc:'Frozen concentrated OJ futures. Florida freeze risk and Brazilian harvest are key drivers.'},
+  'PA':{ts:0.1,tv:10,init:15000,maint:13500,name:'Palladium',exch:'COMEX',type:'Metal',desc:'Palladium futures. Used in catalytic converters. Russian supply concentration creates risk.'},
+  'PL':{ts:0.01,tv:5,init:4000,maint:3600,name:'Platinum',exch:'COMEX',type:'Metal',desc:'Platinum futures. Industrial and jewelry use. South African mine supply dominates.'},
+  'QG':{ts:0.005,tv:12.5,init:1000,maint:900,name:'E-mini Natural Gas',exch:'NYMEX',type:'Energy',desc:'2,500 MMBtu natural gas futures. Smaller version of NG.'},
+  'QM':{ts:0.025,tv:12.5,init:2500,maint:2250,name:'E-mini Crude Oil',exch:'NYMEX',type:'Energy',desc:'500-barrel crude oil futures. Half the size of standard CL.'},
+  'RB':{ts:0.0001,tv:4.2,init:5000,maint:4500,name:'RBOB Gasoline',exch:'NYMEX',type:'Energy',desc:'Reformulated blendstock gasoline futures. Seasonal driving demand pattern.'},
+  'RS':{ts:0.1,tv:2,init:800,maint:700,name:'Canola',exch:'ICE',type:'Ag',desc:'Canola (rapeseed) futures. Used in cooking oil and biofuel.'},
+  'RTY':{ts:0.1,tv:5,init:7000,maint:6300,name:'E-mini Russell 2000',exch:'CME',type:'Equity',desc:'US small-cap equity index. 2000 smallest stocks in Russell 3000.'},
+  'SB':{ts:0.01,tv:11.2,init:1800,maint:1600,name:'Sugar No. 11',exch:'ICE',type:'Soft',desc:'Raw cane sugar futures. Brazil is world\'s largest producer.'},
+  'SF':{ts:0.01,tv:11.2,init:1200,maint:1000,name:'S&P Financial Index',exch:'CME',type:'Equity',desc:'Financial sector index futures.'},
+  'SI':{ts:0.005,tv:25,init:12000,maint:11000,name:'Silver',exch:'COMEX',type:'Metal',desc:'Silver futures. 5,000 troy oz per contract. Both monetary metal and industrial commodity.'},
+  'TN':{ts:0.015625,tv:15.63,init:2200,maint:2000,name:'Ultra 10-Year T-Note',exch:'CBOT',type:'Rates',desc:'10-year Treasury Note with extended maturity range. Key duration risk instrument.'},
+  'UB':{ts:0.03125,tv:31.25,init:4000,maint:3600,name:'Ultra T-Bond',exch:'CBOT',type:'Rates',desc:'30+ year maturity T-Bond futures. Highest duration risk among Treasury futures.'},
+  'VX':{ts:0.05,tv:50,init:8000,maint:7200,name:'VIX Volatility Index',exch:'CBOE',type:'Equity',desc:'Fear index futures. Measures implied volatility of S&P 500 options.'},
+  'VOLQ':{ts:0.05,tv:50,init:6000,maint:5400,name:'Nasdaq Volatility Index',exch:'CBOE',type:'Equity',desc:'Nasdaq-100 implied volatility index futures. Similar to VIX but for tech index.'},
+  'YM':{ts:1,tv:5,init:10000,maint:9000,name:'E-mini Dow Jones',exch:'CBOT',type:'Equity',desc:'Tracks DJIA — 30 large-cap US stocks.'},
+  'ZB':{ts:0.03125,tv:31.25,init:3500,maint:3150,name:'T-Bond 30-Year',exch:'CBOT',type:'Rates',desc:'30-year US Treasury Bond futures. Long duration. Sensitive to inflation expectations.'},
+  'ZC':{ts:0.25,tv:12.5,init:1200,maint:1000,name:'Corn',exch:'CBOT',type:'Ag',desc:'CBOT corn futures. One of world\'s most traded ag contracts.'},
+  'ZF':{ts:0.0078125,tv:7.81,init:800,maint:720,name:'5-Year T-Note',exch:'CBOT',type:'Rates',desc:'5-year Treasury Note futures. Intermediate duration, used in yield curve trades.'},
+  'ZL':{ts:0.01,tv:6,init:800,maint:720,name:'Soybean Oil',exch:'CBOT',type:'Ag',desc:'Soybean oil futures. Used in cooking and biodiesel.'},
+  'ZM':{ts:0.1,tv:10,init:1400,maint:1260,name:'Soybean Meal',exch:'CBOT',type:'Ag',desc:'Soybean meal futures. Primary high-protein animal feed.'},
+  'ZN':{ts:0.015625,tv:15.63,init:1400,maint:1260,name:'10-Year T-Note',exch:'CBOT',type:'Rates',desc:'Most liquid Treasury futures. Global duration benchmark. Fed policy sensitivity.'},
+  'ZO':{ts:0.25,tv:12.5,init:600,maint:540,name:'Oats',exch:'CBOT',type:'Ag',desc:'Oat futures. Smallest grain contract. Used for food and animal feed.'},
+  'ZQ':{ts:0.0025,tv:10.42,init:500,maint:450,name:'30-Day Fed Funds',exch:'CBOT',type:'Rates',desc:'Fed funds rate futures. Direct market expectation of FOMC rate decisions.'},
+  'ZR':{ts:0.5,tv:10,init:600,maint:540,name:'Rough Rice',exch:'CBOT',type:'Ag',desc:'Rough rice futures. Important for Asian food security.'},
+  'ZS':{ts:0.25,tv:12.5,init:1600,maint:1440,name:'Soybeans',exch:'CBOT',type:'Ag',desc:'Soybean futures. US-China trade war exposure. USDA reports are major movers.'},
+  'ZT':{ts:0.00390625,tv:7.81,init:500,maint:450,name:'2-Year T-Note',exch:'CBOT',type:'Rates',desc:'2-year Treasury Note futures. Most sensitive to near-term Fed policy changes.'},
+  'ZW':{ts:0.25,tv:12.5,init:1500,maint:1350,name:'Wheat',exch:'CBOT',type:'Ag',desc:'Soft red winter wheat futures. Geopolitical risk (Black Sea) significantly impacts pricing.'},
+};
+
+const YMAP={'6A':'AUDUSD=X','6B':'GBPUSD=X','6C':'CADUSD=X','6E':'EURUSD=X','6J':'USDJPY=X','6L':'BRLUSD=X','6M':'MXNUSD=X','6N':'NZDUSD=X','6R':'RUBUSD=X','6S':'CHFUSD=X','6Z':'ZARUSD=X','BTC':'BTC-USD','DX':'DX-Y.NYB','VX':'^VIX'};
+function ySym(t){return YMAP[t]||(t+'=F');}
+function dp(ts){return(ts.toString().split('.')[1]||'').length;}
+function fP(n,ts){return n!=null?n.toFixed(Math.max(dp(ts),2)):'—';}
+function fD(n){return n==null?'—':'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+// populate selects
+function popSel(id){
+  const s=document.getElementById(id);
+  if(!s)return;
+  Object.keys(FUTURES).sort().forEach(k=>{
+    const o=document.createElement('option');o.value=k;o.textContent=k+' — '+FUTURES[k].name;s.appendChild(o);
+  });
+}
+['a-ticker','b-ticker','c-ticker','d-ticker','e-ticker','g-ticker'].forEach(popSel);
+
+// ===== LIVE PRICE =====
+let cache={};
+async function fetchLive(t){
+  if(cache[t]&&Date.now()-cache[t].ts<60000)return cache[t];
+  const sym=ySym(t);
+  const url=`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=2d`;
+  try{
+    const r=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+    const o=await r.json();const d=JSON.parse(o.contents);
+    const m=d?.chart?.result?.[0]?.meta;
+    if(m?.regularMarketPrice){
+      const obj={price:m.regularMarketPrice,high:m.regularMarketDayHigh,low:m.regularMarketDayLow,prev:m.chartPreviousClose||m.previousClose,ts:Date.now()};
+      cache[t]=obj;return obj;
+    }
+  }catch(e){}
+  return null;
+}
+
+// ===== NAV =====
+function showPage(id,el,isMobile){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(isMobile){
+    document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
+  } else {
+    document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('active'));
+  }
+  if(el)el.classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ===== MODULE A =====
+let aDir='L', pnlChart=null;
+function aSetDir(d){aDir=d;document.getElementById('a-long').classList.toggle('active',d==='L');document.getElementById('a-short').classList.toggle('active',d==='S');}
+async function aOnTicker(){
+  const t=document.getElementById('a-ticker').value;
+  const s=FUTURES[t];
+  document.getElementById('hs-ticker').textContent=t;
+  const pa=document.getElementById('a-price-area');
+  pa.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:11px;color:var(--muted)"><span class="spin"></span> Loading live price…</div>`;
+  renderSpec(t,pa,false);
+  const p=await fetchLive(t);
+  let priceHtml='';
+  if(p){
+    const chg=p.prev?((p.price-p.prev)/p.prev*100):null;
+    const pill=chg==null?'<span class="pill pill-flat">—</span>':chg>=0?`<span class="pill pill-up">+${chg.toFixed(2)}%</span>`:`<span class="pill pill-down">${chg.toFixed(2)}%</span>`;
+    priceHtml=`<div class="price-strip">
+      <div class="price-strip-top"><span class="price-big">${fP(p.price,s.ts)}</span>${pill}</div>
+      <div class="price-stats">
+        <div class="pst"><div class="lbl">High</div><div class="val hi">${fP(p.high,s.ts)}</div></div>
+        <div class="pst"><div class="lbl">Low</div><div class="val lo">${fP(p.low,s.ts)}</div></div>
+        <div class="pst"><div class="lbl">Prev</div><div class="val">${fP(p.prev,s.ts)}</div></div>
+      </div>
+      <div class="tchips"><span class="tchip">Tick: ${s.ts}</span><span class="tchip">$/tick: ${fD(s.tv)}</span><span class="tchip">Init margin: ${fD(s.init)}</span></div>
+    </div>`;
+    document.getElementById('a-entry').value=fP(p.price,s.ts);
+    document.getElementById('a-af').classList.add('show');
+    document.getElementById('hs-price').textContent=fP(p.price,s.ts);
+  } else {
+    priceHtml=`<div class="alert alert-info" style="margin-bottom:10px;">Live price unavailable. Enter manually.</div>`;
+  }
+  pa.innerHTML=priceHtml;
+  renderSpec(t,pa,true);
+}
+function renderSpec(t,container,append){
+  const s=FUTURES[t];
+  const typeClass='tag-'+s.type.toLowerCase();
+  const html=`<div class="${append?'':''}">
+    <div class="sec-lbl" style="margin-top:${append?'12px':'4px'}">Contract Specs</div>
+    <div class="spec-grid">
+      <span class="spec-lbl">Full Name</span><span class="spec-val">${s.name}</span>
+      <span class="spec-lbl">Exchange</span><span class="spec-val">${s.exch}</span>
+      <span class="spec-lbl">Type</span><span class="spec-val"><span class="tag ${typeClass}">${s.type}</span></span>
+      <span class="spec-lbl">Tick Size</span><span class="spec-val">${s.ts}</span>
+      <span class="spec-lbl">Tick Value</span><span class="spec-val">${fD(s.tv)}</span>
+      <span class="spec-lbl">Init Margin</span><span class="spec-val">${fD(s.init)}</span>
+      <span class="spec-lbl">Maint Margin</span><span class="spec-val">${fD(s.maint)}</span>
+    </div>
+    <div class="spec-desc">${s.desc}</div>
+  </div>`;
+  if(append)container.insertAdjacentHTML('beforeend',html);
+  else container.innerHTML=html;
+}
+function aCalculate(){
+  const t=document.getElementById('a-ticker').value;const s=FUTURES[t];
+  const contracts=parseFloat(document.getElementById('a-contracts').value);
+  const entry=parseFloat(document.getElementById('a-entry').value);
+  const stop=parseFloat(document.getElementById('a-stop').value);
+  const capital=parseFloat(document.getElementById('a-capital').value)||0;
+  const target=parseFloat(document.getElementById('a-target').value)||0;
+  const errEl=document.getElementById('a-err');errEl.style.display='none';
+  if(!contracts||contracts<=0)return showErr('a-err','Enter valid contract count');
+  if(isNaN(entry)||entry<=0)return showErr('a-err','Enter valid entry price');
+  if(isNaN(stop)||stop<=0)return showErr('a-err','Enter valid stop loss price');
+  const pts=Math.abs(entry-stop);
+  const ticks=pts/s.ts;
+  const rpc=ticks*s.tv;
+  const total=rpc*contracts;
+  const pct=capital>0?(total/capital*100):null;
+  const rr=target>0?(Math.abs(target-entry)/pts):null;
+  // Risk meter
+  let meterClass='risk-low',meterLabel='LOW RISK',meterW=0;
+  if(pct!=null){meterW=Math.min(pct/10*100,100);if(pct>5){meterClass='risk-high';meterLabel='HIGH RISK';}else if(pct>2){meterClass='risk-mod';meterLabel='MODERATE RISK';}}
+  const rrHtml=rr?`<div class="metric"><div class="lbl">Risk/Reward Ratio</div><div class="val" style="color:var(--${rr>=2?'green':rr>=1?'amber':'red'})">${rr.toFixed(2)}R</div><div class="sub">${rr>=2?'Favourable':'Unfavourable if <1R'}</div></div>`:'';
+  document.getElementById('a-results-area').innerHTML=`
+    <div class="rg2" style="margin-bottom:8px;">
+      <div class="metric m-red"><div class="lbl">Total Trade Risk</div><div class="val">${fD(total)}</div></div>
+      <div class="metric m-blue"><div class="lbl">Risk per Contract</div><div class="val">${fD(rpc)}</div></div>
+      <div class="metric m-accent"><div class="lbl">Ticks at Risk</div><div class="val">${ticks.toFixed(1)}</div></div>
+      <div class="metric"><div class="lbl">Price Points at Risk</div><div class="val">${fP(pts,s.ts)}</div></div>
+    </div>
+    <div class="rg2" style="margin-bottom:8px;">
+      <div class="metric"><div class="lbl">% of Capital at Risk</div><div class="val">${pct!=null?pct.toFixed(2)+'%':'—'}</div></div>
+      <div class="metric"><div class="lbl">Stop Distance</div><div class="val">${((pts/entry)*100).toFixed(2)}%</div></div>
+      ${rrHtml}
+    </div>
+    ${pct!=null?`<div class="risk-meter"><div class="risk-meter-label"><span>Capital at Risk</span><span>${pct.toFixed(2)}%</span></div><div class="risk-track"><div class="risk-fill ${meterClass}" style="width:${meterW}%"></div></div><span class="risk-badge ${meterClass}">${meterLabel}</span></div>`:''}
+    ${pct!=null&&pct>5?`<div class="alert alert-danger">⚠ Risk exceeds 5% of capital — this is high. Standard risk management limits 1–2% per trade.</div>`:''}
+    ${pct!=null&&pct>2&&pct<=5?`<div class="alert alert-warn">! Risk is ${pct.toFixed(1)}% of capital. Consider reducing position size.</div>`:''}
+    <div class="interp">Trade Risk = ${fD(total)} | Init Margin Required = ${fD(s.init*contracts)}${total>s.init*contracts?' | ⚠ Risk exceeds margin by '+((total/(s.init*contracts)-1)*100).toFixed(0)+'% — potential default exposure':' | ✓ Risk within margin bounds'}</div>
+  `;
+  // Update hero stats
+  document.getElementById('hs-risk').textContent=fD(total);
+  if(capital>0){
+    const allowed=capital*0.01;
+    document.getElementById('hs-contracts').textContent=Math.floor(allowed/rpc)||'0';
+  }
+  // P&L Chart
+  drawPnlChart(t,entry,stop,target,contracts,s);
+  document.getElementById('a-chart-card').style.display='block';
+}
+function drawPnlChart(t,entry,stop,target,contracts,s){
+  if(pnlChart)pnlChart.destroy();
+  const range=Math.abs(entry-stop)*4;
+  const steps=40;
+  const labels=[],data=[],colors=[];
+  for(let i=0;i<=steps;i++){
+    const price=entry-range+(i/steps)*range*2;
+    const ticks=(price-entry)/s.ts;
+    const pnl=ticks*s.tv*contracts;
+    labels.push(fP(price,s.ts));data.push(parseFloat(pnl.toFixed(2)));
+    colors.push(pnl>=0?'rgba(34,197,94,0.7)':'rgba(239,68,68,0.7)');
+  }
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  const gridColor=isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.06)';
+  const textColor=isDark?'#7a8694':'#64748b';
+  const ctx=document.getElementById('a-chart').getContext('2d');
+  pnlChart=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{label:'P&L ($)',data,backgroundColor:colors,borderWidth:0,borderRadius:2}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:i=>`P&L: ${fD(i.raw)}`}},
+        annotation:{annotations:{
+          entry:{type:'line',xMin:entry,xMax:entry,borderColor:'#fbbf24',borderWidth:1.5,label:{content:'Entry',display:true}},
+        }}
+      },
+      scales:{
+        x:{ticks:{color:textColor,maxRotation:0,autoSkip:true,maxTicksLimit:8,font:{size:9}},grid:{color:gridColor}},
+        y:{ticks:{color:textColor,callback:v=>'$'+v.toLocaleString(),font:{size:9}},grid:{color:gridColor}}
+      }
+    }
+  });
+}
+function aReset(){
+  ['a-contracts','a-entry','a-stop','a-capital','a-target'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('a-results-area').innerHTML='<div style="font-size:11px;color:var(--muted);">Results will appear here after calculation.</div>';
+  document.getElementById('a-chart-card').style.display='none';
+  document.getElementById('a-af').classList.remove('show');
+  document.getElementById('a-err').style.display='none';
+  if(pnlChart){pnlChart.destroy();pnlChart=null;}
+}
+
+// ===== MODULE B =====
+let bDir='L';
+function bSetDir(d){bDir=d;document.getElementById('b-long').classList.toggle('active',d==='L');document.getElementById('b-short').classList.toggle('active',d==='S');}
+async function bOnTicker(){
+  const t=document.getElementById('b-ticker').value;
+  const p=await fetchLive(t);
+  if(p){document.getElementById('b-entry').value=fP(p.price,FUTURES[t].ts);document.getElementById('b-af').classList.add('show');}
+}
+function bCalculate(){
+  const t=document.getElementById('b-ticker').value;const s=FUTURES[t];
+  const capital=parseFloat(document.getElementById('b-capital').value);
+  const riskpct=parseFloat(document.getElementById('b-riskpct').value);
+  const entry=parseFloat(document.getElementById('b-entry').value);
+  const stop=parseFloat(document.getElementById('b-stop').value);
+  if(!capital||capital<=0)return showErr('b-err','Enter account capital');
+  if(!riskpct||riskpct<=0)return showErr('b-err','Enter max risk %');
+  if(isNaN(entry)||entry<=0)return showErr('b-err','Enter valid entry price');
+  if(isNaN(stop)||stop<=0)return showErr('b-err','Enter valid stop loss price');
+  const allowed=capital*(riskpct/100);
+  const ticks=Math.abs(entry-stop)/s.ts;
+  const rpc=ticks*s.tv;
+  if(rpc<=0)return showErr('b-err','Risk per contract is zero — check prices');
+  const contracts=Math.floor(allowed/rpc);
+  const actual=contracts*rpc;
+  const buffer=allowed-actual;
+  document.getElementById('bs-c').textContent=contracts>0?contracts:'0';
+  document.getElementById('bs-a').textContent=fD(allowed);
+  document.getElementById('bs-u').textContent=fD(actual);
+  document.getElementById('bs-b').textContent=fD(buffer);
+  document.getElementById('bs-rpc').textContent=fD(rpc);
+  document.getElementById('bs-t').textContent=ticks.toFixed(1);
+  const interp=document.getElementById('bs-interp');
+  interp.textContent=`With ${fD(capital)} capital and ${riskpct}% risk tolerance, you can afford to lose ${fD(allowed)} on this trade. At ${fD(rpc)} risk per contract, that allows ${contracts} contract${contracts!==1?'s':''}.`;
+  interp.style.display='block';
+  const alert=document.getElementById('bs-alert');
+  if(contracts===0){alert.className='alert alert-danger';alert.textContent='Stop loss too tight relative to tick value. Widen stop or reduce target risk %.';alert.style.display='block';}
+  else if(contracts>=10){alert.className='alert alert-warn';alert.textContent=`${contracts} contracts is a large position. Verify margin: ${fD(s.init*contracts)} initial margin required.`;alert.style.display='block';}
+  else{alert.style.display='none';}
+  document.getElementById('b-results').style.display='block';
+  document.getElementById('hs-contracts').textContent=contracts;
+}
+function bReset(){['b-capital','b-riskpct','b-entry','b-stop'].forEach(id=>document.getElementById(id).value='');document.getElementById('b-results').style.display='none';document.getElementById('b-af').classList.remove('show');document.getElementById('b-err').style.display='none';}
+
+// ===== MODULE C =====
+async function cOnTicker(){
+  const t=document.getElementById('c-ticker').value;const s=FUTURES[t];
+  document.getElementById('c-init').value=s.init;document.getElementById('c-maint').value=s.maint;
+  const p=await fetchLive(t);
+  if(p){document.getElementById('c-entry').value=fP(p.price,s.ts);document.getElementById('c-af').classList.add('show');}
+}
+function cCalculate(){
+  const t=document.getElementById('c-ticker').value;const s=FUTURES[t];
+  const contracts=parseFloat(document.getElementById('c-contracts').value);
+  const entry=parseFloat(document.getElementById('c-entry').value);
+  const stop=parseFloat(document.getElementById('c-stop').value);
+  const init=parseFloat(document.getElementById('c-init').value);
+  const maint=parseFloat(document.getElementById('c-maint').value);
+  if(!contracts||contracts<=0)return showErr('c-err','Enter valid contract count');
+  if(isNaN(entry)||entry<=0)return showErr('c-err','Enter valid entry price');
+  if(isNaN(stop)||stop<=0)return showErr('c-err','Enter valid stop price');
+  if(!init||init<=0)return showErr('c-err','Enter initial margin');
+  if(!maint||maint<=0)return showErr('c-err','Enter maintenance margin');
+  const ticks=Math.abs(entry-stop)/s.ts;
+  const rpc=ticks*s.tv;
+  const totalRisk=rpc*contracts;
+  const totalInit=init*contracts;
+  const totalMaint=maint*contracts;
+  const ratio=totalRisk/totalInit;
+  document.getElementById('cm-i').textContent=fD(totalInit);
+  document.getElementById('cm-m').textContent=fD(totalMaint);
+  document.getElementById('cm-r').textContent=fD(totalRisk);
+  document.getElementById('cm-ratio').textContent=ratio.toFixed(2)+'x';
+  const pct=Math.min((totalRisk/totalInit)*100,100);
+  const bar=document.getElementById('cm-bar');
+  bar.style.width=pct+'%';
+  bar.style.background=ratio>1?'var(--red)':ratio>0.75?'var(--amber)':'var(--green)';
+  document.getElementById('cm-bpct').textContent=(totalRisk/totalInit*100).toFixed(1)+'% of init margin';
+  const v=document.getElementById('cm-verdict');
+  const interp=document.getElementById('cm-interp');
+  if(ratio>1){
+    v.className='alert alert-danger';v.textContent='⚠ DANGER: Trade risk EXCEEDS initial margin. A full adverse move could trigger a margin call before stop is reached.';
+    interp.textContent=`Trade Risk = ${fD(totalRisk)} | Margin Posted = ${fD(totalInit)} | Risk exceeds margin by ${((ratio-1)*100).toFixed(0)}% → potential default exposure on full adverse move.`;
+  } else if(ratio>0.75){
+    v.className='alert alert-warn';v.textContent='! Trade risk is 75%+ of initial margin. High likelihood of margin pressure in adverse move.';
+    interp.textContent=`Trade Risk = ${fD(totalRisk)} | Margin Posted = ${fD(totalInit)} | Risk is ${(ratio*100).toFixed(0)}% of posted collateral. Monitor closely.`;
+  } else {
+    v.className='alert alert-ok';v.textContent='✓ Trade risk is within margin. Stop loss is sensibly sized relative to posted collateral.';
+    interp.textContent=`Trade Risk = ${fD(totalRisk)} | Margin Posted = ${fD(totalInit)} | Risk is ${(ratio*100).toFixed(0)}% of margin. Adequate buffer exists.`;
+  }
+  v.style.display='block';interp.style.display='block';
+  document.getElementById('c-results').style.display='block';
+}
+function cReset(){['c-contracts','c-entry','c-stop','c-init','c-maint'].forEach(id=>document.getElementById(id).value='');document.getElementById('c-results').style.display='none';document.getElementById('c-af').classList.remove('show');document.getElementById('c-err').style.display='none';}
+
+// ===== MODULE D =====
+let dDir='L';
+function dSetDir(d){dDir=d;document.getElementById('d-long').classList.toggle('active',d==='L');document.getElementById('d-short').classList.toggle('active',d==='S');}
+async function dOnTicker(){
+  const t=document.getElementById('d-ticker').value;
+  const p=await fetchLive(t);
+  if(p){document.getElementById('d-entry').value=fP(p.price,FUTURES[t].ts);document.getElementById('d-af').classList.add('show');}
+}
+function dCalculate(){
+  const t=document.getElementById('d-ticker').value;const s=FUTURES[t];
+  const contracts=parseFloat(document.getElementById('d-contracts').value);
+  const entry=parseFloat(document.getElementById('d-entry').value);
+  const capital=parseFloat(document.getElementById('d-capital').value)||0;
+  const customShock=parseFloat(document.getElementById('d-custom').value);
+  if(!contracts||contracts<=0)return showErr('d-err','Enter valid contract count');
+  if(isNaN(entry)||entry<=0)return showErr('d-err','Enter valid entry price');
+  const shocks=dDir==='L'
+    ?[{l:'−2% Adverse Move',p:-2,cls:''},{l:'−5% Adverse Move',p:-5,cls:''},{l:'−10% Adverse Move',p:-10,cls:''},{l:'Limit Down (−20%)',p:-20,cls:'worst'}]
+    :[{l:'+2% Adverse Move',p:2,cls:''},{l:'+5% Adverse Move',p:5,cls:''},{l:'+10% Adverse Move',p:10,cls:''},{l:'Limit Up (+20%)',p:20,cls:'worst'}];
+  if(!isNaN(customShock))shocks.push({l:`Custom Shock (${customShock>0?'+':''}${customShock}%)`,p:customShock,cls:''});
+  // find worst for badge
+  const losses=shocks.map(sc=>{const sp=entry*(1+sc.p/100);return Math.abs(entry-sp)/s.ts*s.tv*contracts;});
+  const maxLoss=Math.max(...losses);
+  let html='<div class="stress-cards">';
+  shocks.forEach((sc,i)=>{
+    const sp=entry*(1+sc.p/100);
+    const tm=Math.abs(entry-sp)/s.ts;
+    const lrpc=tm*s.tv;
+    const tl=lrpc*contracts;
+    const capPct=capital>0?(tl/capital*100):null;
+    const isWorst=tl===maxLoss;
+    const barW=capital>0?Math.min(capPct/20*100,100):Math.min(tl/maxLoss*100,100);
+    const barColor=isWorst?'var(--red)':capPct!=null&&capPct>5?'var(--red)':capPct!=null&&capPct>2?'var(--amber)':'var(--blue)';
+    html+=`<div class="stress-card${isWorst?' worst':''}">
+      <div class="stress-card-top">
+        <span class="stress-scenario-lbl${isWorst?' worst-lbl':''}">${sc.l}${isWorst?' · WORST CASE':''}</span>
+        <span class="stress-loss-big">${fD(tl)}</span>
+      </div>
+      <div class="stress-grid">
+        <div class="stress-stat"><span class="sl">Scenario Price</span><span class="sv">${fP(sp,s.ts)}</span></div>
+        <div class="stress-stat"><span class="sl">Ticks Moved</span><span class="sv amber">${tm.toFixed(0)}</span></div>
+        <div class="stress-stat"><span class="sl">Loss / Contract</span><span class="sv red">${fD(lrpc)}</span></div>
+      </div>
+      ${capital>0?`<div class="stress-capbar"><div class="stress-capbar-lbl"><span>Capital Impact</span><span>${capPct.toFixed(2)}%</span></div><div class="stress-capbar-track"><div class="stress-capbar-fill" style="width:${barW}%;background:${barColor}"></div></div></div>`:''}
+    </div>`;
+  });
+  html+='</div>';
+  document.getElementById('d-results').innerHTML=html;
+  document.getElementById('d-err').style.display='none';
+}
+function dReset(){['d-contracts','d-entry','d-capital','d-custom'].forEach(id=>document.getElementById(id).value='');document.getElementById('d-results').innerHTML='<div class="empty">Run the stress test to see scenario losses.</div>';document.getElementById('d-err').style.display='none';document.getElementById('d-af').classList.remove('show');}
+
+// ===== MODULE E =====
+let eDir='L',portfolio=[];
+function eSetDir(d){eDir=d;document.getElementById('e-long').classList.toggle('active',d==='L');document.getElementById('e-short').classList.toggle('active',d==='S');}
+function eAdd(){
+  const t=document.getElementById('e-ticker').value;const s=FUTURES[t];
+  const contracts=parseFloat(document.getElementById('e-contracts').value);
+  const entry=parseFloat(document.getElementById('e-entry').value);
+  const stop=parseFloat(document.getElementById('e-stop').value);
+  const margin=parseFloat(document.getElementById('e-margin').value)||s.init;
+  if(!contracts||contracts<=0)return showErr('e-err','Enter valid contract count');
+  if(isNaN(entry)||entry<=0)return showErr('e-err','Enter valid entry price');
+  if(isNaN(stop)||stop<=0)return showErr('e-err','Enter valid stop price');
+  const ticks=Math.abs(entry-stop)/s.ts;
+  const rpc=ticks*s.tv;
+  portfolio.push({id:Date.now(),ticker:t,name:s.name,dir:eDir,contracts,entry,stop,margin,ticks,rpc,totalRisk:rpc*contracts,totalMargin:margin*contracts});
+  document.getElementById('e-err').style.display='none';
+  ['e-entry','e-stop','e-margin'].forEach(id=>document.getElementById(id).value='');
+  eRefresh();
+}
+function eRemove(id){portfolio=portfolio.filter(p=>p.id!==id);eRefresh();}
+function eClear(){portfolio=[];eRefresh();}
+function eRefresh(){
+  const capital=parseFloat(document.getElementById('e-capital').value)||0;
+  const totalRisk=portfolio.reduce((a,p)=>a+p.totalRisk,0);
+  const totalMargin=portfolio.reduce((a,p)=>a+p.totalMargin,0);
+  const largest=portfolio.length?Math.max(...portfolio.map(p=>p.totalRisk)):0;
+  document.getElementById('ep-risk').textContent=fD(totalRisk);
+  document.getElementById('ep-margin').textContent=fD(totalMargin);
+  document.getElementById('ep-largest').textContent=fD(largest);
+  document.getElementById('ep-count').textContent=portfolio.length;
+  const conc=document.getElementById('e-conc');
+  if(!portfolio.length){conc.innerHTML='<div class="empty" style="padding:10px 0;">No positions yet.</div>';}
+  else{
+    conc.innerHTML=[...portfolio].sort((a,b)=>b.totalRisk-a.totalRisk).map(p=>{
+      const pct=totalRisk>0?(p.totalRisk/totalRisk*100):0;
+      return `<div class="conc-item"><div class="conc-lbl"><span>${p.ticker} <span style="color:var(--muted);font-size:10px;">${p.dir==='L'?'LONG':'SHORT'} ${p.contracts}x</span></span><span>${pct.toFixed(1)}% — ${fD(p.totalRisk)}</span></div><div class="conc-bar"><div class="conc-fill" style="width:${pct}%"></div></div></div>`;
+    }).join('');
+  }
+  const tbl=document.getElementById('e-table');
+  if(!portfolio.length){tbl.innerHTML='<div class="empty">No positions added yet.</div>';return;}
+  tbl.innerHTML=`<div class="tbl-wrap"><table>
+    <thead><tr><th>Ticker</th><th>Side</th><th>Contracts</th><th>Entry</th><th>Stop</th><th class="td-r">Risk/Contract</th><th class="td-r">Total Risk</th><th class="td-r">Margin</th><th></th></tr></thead>
+    <tbody>${portfolio.map(p=>`<tr>
+      <td><strong style="color:var(--accent)">${p.ticker}</strong><div style="font-size:9px;color:var(--muted)">${p.name}</div></td>
+      <td><span class="tag tag-${p.dir==='L'?'long':'short'}">${p.dir==='L'?'LONG':'SHORT'}</span></td>
+      <td>${p.contracts}</td><td>${fP(p.entry,FUTURES[p.ticker].ts)}</td><td>${fP(p.stop,FUTURES[p.ticker].ts)}</td>
+      <td class="td-r" style="color:var(--blue)">${fD(p.rpc)}</td>
+      <td class="td-r" style="color:var(--red);font-weight:600">${fD(p.totalRisk)}</td>
+      <td class="td-r" style="color:var(--muted)">${fD(p.totalMargin)}</td>
+      <td><button class="btn btn-danger" style="height:28px;padding:0 10px;font-size:10px" onclick="eRemove(${p.id})">✕</button></td>
+    </tr>`).join('')}</tbody>
+    <tfoot><tr style="border-top:0.5px solid var(--border2)">
+      <td colspan="6" style="color:var(--muted);font-size:10px;padding:10px">TOTALS</td>
+      <td class="td-r" style="color:var(--red);font-weight:700;padding:10px">${fD(totalRisk)}</td>
+      <td class="td-r" style="color:var(--muted);padding:10px">${fD(totalMargin)}</td><td></td>
+    </tr></tfoot>
+  </table></div>`;
+}
+
+// ===== MODULE F: GLOSSARY =====
+let glosType='ALL';
+const TYPES=['ALL','Equity','Energy','Metal','FX','Rates','Ag','Soft','Crypto'];
+function buildGlossary(){
+  document.getElementById('glos-filters').innerHTML=TYPES.map(t=>`<button class="gf-btn${t==='ALL'?' active':''}" onclick="setGlosType('${t}')">${t}</button>`).join('');
+  glosRender();
+}
+function setGlosType(t){
+  glosType=t;
+  document.querySelectorAll('.gf-btn').forEach(b=>b.classList.toggle('active',b.textContent===t));
+  glosRender();
+}
+function glosRender(){
+  const q=document.getElementById('glos-search').value.toLowerCase();
+  document.getElementById('glos-body').innerHTML=Object.entries(FUTURES)
+    .filter(([k,v])=>(glosType==='ALL'||v.type===glosType)&&(!q||k.toLowerCase().includes(q)||v.name.toLowerCase().includes(q)||v.desc.toLowerCase().includes(q)||v.exch.toLowerCase().includes(q)))
+    .sort((a,b)=>a[0].localeCompare(b[0]))
+    .map(([k,v])=>`<div class="glos-row"><span class="glos-ticker">${k}</span><span class="glos-name">${v.name}</span><span><span class="tag tag-${v.type.toLowerCase()}">${v.exch}</span></span><span><span class="tag tag-${v.type.toLowerCase()}">${v.type}</span></span><span class="glos-desc">${v.desc}</span></div>`).join('');
+}
+
+// ===== EXPORT PDF =====
+function downloadReport(){
+  const t=document.getElementById('a-ticker').value;
+  const s=FUTURES[t];
+  const entry=parseFloat(document.getElementById('a-entry').value)||0;
+  const stop=parseFloat(document.getElementById('a-stop').value)||0;
+  const contracts=parseFloat(document.getElementById('a-contracts').value)||0;
+  const capital=parseFloat(document.getElementById('a-capital').value)||0;
+  if(!entry||!stop){alert('Please run a calculation first before exporting.');return;}
+  const pts=Math.abs(entry-stop);
+  const ticks=pts/s.ts;
+  const rpc=ticks*s.tv;
+  const total=rpc*contracts;
+  const pct=capital>0?(total/capital*100):null;
+  const now=new Date().toLocaleString();
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>FRT Report</title><style>body{font-family:monospace;padding:40px;max-width:600px;margin:0 auto;color:#1a1a1a;}h1{font-size:20px;margin-bottom:4px;}h2{font-size:14px;margin:20px 0 10px;border-bottom:1px solid #ddd;padding-bottom:4px;}table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12px;}td{padding:6px 8px;border:0.5px solid #ddd;}td:first-child{color:#666;width:50%;}.warn{background:#fff3cd;padding:10px;border-radius:4px;font-size:12px;margin-top:12px;}.ok{background:#d4edda;padding:10px;border-radius:4px;font-size:12px;margin-top:12px;}</style></head><body>
+    <h1>Futures Risk Terminal — Trade Report</h1>
+    <p style="font-size:11px;color:#666;">Generated: ${now}</p>
+    <h2>Contract</h2>
+    <table><tr><td>Ticker</td><td>${t}</td></tr><tr><td>Full Name</td><td>${s.name}</td></tr><tr><td>Exchange</td><td>${s.exch}</td></tr><tr><td>Tick Size</td><td>${s.ts}</td></tr><tr><td>Tick Value</td><td>${fD(s.tv)}</td></tr></table>
+    <h2>Trade Parameters</h2>
+    <table><tr><td>Direction</td><td>${aDir==='L'?'LONG':'SHORT'}</td></tr><tr><td>Contracts</td><td>${contracts}</td></tr><tr><td>Entry Price</td><td>${fP(entry,s.ts)}</td></tr><tr><td>Stop Loss</td><td>${fP(stop,s.ts)}</td></tr></table>
+    <h2>Risk Output</h2>
+    <table><tr><td>Ticks at Risk</td><td>${ticks.toFixed(1)}</td></tr><tr><td>Risk per Contract</td><td>${fD(rpc)}</td></tr><tr><td>Total Trade Risk</td><td><strong>${fD(total)}</strong></td></tr><tr><td>% of Capital</td><td>${pct!=null?pct.toFixed(2)+'%':'N/A'}</td></tr></table>
+    ${pct!=null&&pct>2?`<div class="warn">⚠ Risk is ${pct.toFixed(2)}% of capital. Standard limit is 1–2%.</div>`:`<div class="ok">✓ Risk within standard limits.</div>`}
+    <p style="font-size:10px;color:#999;margin-top:24px;">For educational purposes only. Not financial advice.</p>
+  </body></html>`;
+  const w=window.open('','_blank');
+  w.document.write(html);w.document.close();
+  setTimeout(()=>w.print(),500);
+}
+
+// ===== MODULE G: SPAN-2 =====
+let gDir='L';
+function gSetDir(d){gDir=d;document.getElementById('g-long').classList.toggle('active',d==='L');document.getElementById('g-short').classList.toggle('active',d==='S');}
+async function gOnTicker(){
+  const t=document.getElementById('g-ticker').value;const s=FUTURES[t];
+  const p=await fetchLive(t);
+  if(p){document.getElementById('g-price').value=fP(p.price,s.ts);document.getElementById('g-af').classList.add('show');}
+  // Pre-fill PSR as 5% of price (rough approximation)
+  const price=p?p.price:0;
+  if(price>0){
+    const psr=parseFloat((price*0.05/s.ts*s.tv).toFixed(2));
+    document.getElementById('g-psr').value=psr;
+  }
+  document.getElementById('g-spread').value=parseFloat((s.init*0.05).toFixed(2));
+}
+function gReset(){
+  ['g-contracts','g-price','g-psr','g-spread','g-spot','g-delivery','g-nov'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('g-vsr').value=30;
+  document.getElementById('g-results').style.display='none';
+  document.getElementById('g-placeholder').style.display='block';
+  document.getElementById('g-err').style.display='none';
+  document.getElementById('g-af').classList.remove('show');
+}
+function gCalculate(){
+  const t=document.getElementById('g-ticker').value;const s=FUTURES[t];
+  const contracts=parseFloat(document.getElementById('g-contracts').value)||1;
+  const price=parseFloat(document.getElementById('g-price').value);
+  const psr=parseFloat(document.getElementById('g-psr').value);
+  const vsr=parseFloat(document.getElementById('g-vsr').value)||30;
+  const spreadCharge=parseFloat(document.getElementById('g-spread').value)||0;
+  const spotCharge=parseFloat(document.getElementById('g-spot').value)||0;
+  const deliveryRisk=parseFloat(document.getElementById('g-delivery').value)||0;
+  const nov=parseFloat(document.getElementById('g-nov').value)||0;
+  const steps=parseInt(document.getElementById('g-steps').value)||4;
+  if(isNaN(price)||price<=0)return showErr('g-err','Enter valid current price');
+  if(isNaN(psr)||psr<=0)return showErr('g-err','Enter price scan range');
+
+  // Build scenario grid: N price steps each side + centre + 2 extreme
+  // Vol shifts: down (−vsr%), flat (0), up (+vsr%)
+  const volShifts=[-vsr,0,vsr];
+  const priceSteps=[];
+  for(let i=-steps;i<=steps;i++) priceSteps.push(i/steps); // fractions of PSR
+  // Add 2 extreme deep-out-of-money scenarios (SPAN-2 always includes these)
+  const extremes=[{pFrac:3,vFrac:0,label:'Extreme Up (3× PSR)'},{pFrac:-3,vFrac:0,label:'Extreme Down (3× PSR)'}];
+
+  // For each scenario: P&L = price change in ticks × tv × contracts
+  // Vol shift adjusts by a simple approximation: delta × vol adjustment (for futures, vol effect is minor; for options it would be vega × vol shift)
+  const sign=gDir==='L'?1:-1;
+  function scenarioPnl(pFrac,vFrac){
+    const pMove=pFrac*psr; // dollar move
+    const ticks=pMove/s.tv; // ticks moved (psr is in dollar terms per contract)
+    // For futures: PnL = ticks × tv × contracts × direction
+    // Vol shift adds a small dampening/amplification (proxy: 0.1 × vFrac/100 × abs(pMove))
+    const volAdj=(vFrac/100)*Math.abs(pMove)*0.1;
+    return sign*(pMove+volAdj)*contracts;
+  }
+
+  // Build full grid (price steps × vol shifts)
+  let gridPnls=[]; // 2D array [priceIdx][volIdx]
+  let allPnls=[];
+  priceSteps.forEach((pf,pi)=>{
+    gridPnls[pi]=[];
+    volShifts.forEach((vf,vi)=>{
+      const pnl=scenarioPnl(pf,vf/100*psr);
+      gridPnls[pi][vi]=pnl;
+      allPnls.push(pnl);
+    });
+  });
+  // Extreme scenarios
+  extremes.forEach(ex=>{
+    const pnl=scenarioPnl(ex.pFrac,0);
+    allPnls.push(pnl);
+  });
+
+  // Scanning risk = worst case loss (most negative PnL)
+  const worstPnl=Math.min(...allPnls);
+  const scanningRisk=Math.max(-worstPnl,0); // loss is positive number
+
+  // Total SPAN-2 margin
+  const totalMargin=scanningRisk+spreadCharge+spotCharge+deliveryRisk-Math.max(nov,0);
+  const finalMargin=Math.max(totalMargin,s.maint*contracts); // floor at maintenance margin
+
+  // ===== RENDER GRID =====
+  // Colour scale: green (profit) → yellow → red (loss)
+  function cellColor(pnl){
+    const maxAbs=Math.max(...allPnls.map(Math.abs))||1;
+    const norm=pnl/maxAbs; // -1 to 1
+    if(norm>=0){
+      const g=Math.round(180+75*norm);const r=Math.round(34+180*(1-norm));
+      return{bg:`rgba(${r},${g},80,0.18)`,text:norm>0.3?'var(--green)':'var(--text)',border:norm>0.3?'rgba(34,197,94,0.25)':'var(--border)'};
+    } else {
+      const intensity=Math.abs(norm);
+      return{bg:`rgba(239,68,68,${0.08+0.20*intensity})`,text:intensity>0.4?'var(--red)':'var(--text)',border:intensity>0.4?'var(--red-b)':'var(--border)'};
+    }
+  }
+
+  // Header row
+  let gridHtml=`<div style="font-size:10px;color:var(--muted);margin-bottom:6px;">Price Move (rows) × Volatility Shift (columns)</div>`;
+  gridHtml+=`<div style="display:grid;grid-template-columns:90px repeat(${volShifts.length},1fr);gap:2px;min-width:320px;">`;
+  // Column headers
+  gridHtml+=`<div style="font-size:9px;color:var(--muted);padding:4px;"></div>`;
+  volShifts.forEach(v=>{ gridHtml+=`<div style="text-align:center;font-size:9px;color:var(--muted);padding:4px;letter-spacing:0.3px;">Vol ${v>0?'+':''}${v}%</div>`; });
+  // Data rows
+  priceSteps.forEach((pf,pi)=>{
+    const priceMoveLabel=pf===0?'Flat (0%)':`${pf>0?'+':''}${(pf*100).toFixed(0)}%`;
+    gridHtml+=`<div style="font-size:9px;color:var(--muted);padding:6px 4px;display:flex;align-items:center;">${priceMoveLabel}</div>`;
+    volShifts.forEach((vf,vi)=>{
+      const pnl=gridPnls[pi][vi];
+      const c=cellColor(pnl);
+      const isWorst=pnl===worstPnl;
+      gridHtml+=`<div class="span2-cell" style="background:${c.bg};color:${c.text};border:0.5px solid ${isWorst?'var(--red)':c.border};${isWorst?'box-shadow:0 0 0 1px var(--red);':''}" title="Price: ${priceMoveLabel}, Vol: ${vf>0?'+':''}${vf}%">
+        <span class="sc-loss">${pnl>=0?'+':''}${fD(Math.abs(pnl)).replace('$','')}</span>
+        <span class="sc-lbl">${isWorst?'⚠ WORST':pnl>=0?'profit':'loss'}</span>
+      </div>`;
+    });
+  });
+  // Extreme rows
+  extremes.forEach(ex=>{
+    const pnl=scenarioPnl(ex.pFrac,0);
+    const c=cellColor(pnl);
+    const isWorst=pnl===worstPnl;
+    gridHtml+=`<div style="font-size:9px;color:var(--amber);padding:6px 4px;display:flex;align-items:center;">${ex.label}</div>`;
+    gridHtml+=`<div class="span2-cell" style="grid-column:span ${volShifts.length};background:${c.bg};color:${c.text};border:0.5px solid ${isWorst?'var(--red)':c.border};">
+      <span class="sc-loss">${pnl>=0?'+':''}${fD(Math.abs(pnl)).replace('$','')}</span>
+      <span class="sc-lbl">${isWorst?'⚠ WORST CASE':pnl>=0?'profit':'loss'} · flat vol</span>
+    </div>`;
+  });
+  gridHtml+=`</div>`;
+  document.getElementById('g-grid-wrap').innerHTML=gridHtml;
+
+  // Legend
+  document.getElementById('g-legend').innerHTML=`
+    <div class="legend-item"><div class="legend-dot" style="background:rgba(34,197,94,0.25)"></div>Profit</div>
+    <div class="legend-item"><div class="legend-dot" style="background:rgba(239,68,68,0.15)"></div>Loss</div>
+    <div class="legend-item"><div class="legend-dot" style="background:rgba(239,68,68,0.28);border:1px solid var(--red)"></div>Worst case (scanning risk)</div>`;
+
+  // Components
+  document.getElementById('g-components').innerHTML=`
+    <div class="span2-component"><div class="lbl">Scanning Risk</div><div class="val" style="color:var(--red)">${fD(scanningRisk)}</div><div class="sub">Worst scenario P&L across ${priceSteps.length*volShifts.length+2} scenarios</div></div>
+    <div class="span2-component"><div class="lbl">Spread Charge</div><div class="val" style="color:var(--amber)">${fD(spreadCharge)}</div><div class="sub">Inter-month basis risk</div></div>
+    <div class="span2-component"><div class="lbl">Spot Month Charge</div><div class="val" style="color:var(--amber)">${fD(spotCharge)}</div><div class="sub">Front month risk premium</div></div>
+    <div class="span2-component"><div class="lbl">Delivery Risk</div><div class="val" style="color:var(--amber)">${fD(deliveryRisk)}</div><div class="sub">Physical settlement risk</div></div>
+    <div class="span2-component"><div class="lbl">NOV Credit</div><div class="val" style="color:var(--green)">−${fD(Math.max(nov,0))}</div><div class="sub">Net option value offset</div></div>
+    <div class="span2-component" style="border-color:rgba(56,189,248,0.25);background:var(--blue-d)"><div class="lbl">Maint Margin Floor</div><div class="val" style="color:var(--blue)">${fD(s.maint*contracts)}</div><div class="sub">Exchange minimum</div></div>`;
+
+  document.getElementById('g-total-val').textContent=fD(finalMargin);
+
+  // Interpretation
+  const ratio=scanningRisk/(s.init*contracts);
+  document.getElementById('g-interp').innerHTML=`
+    Scanning Risk (${fD(scanningRisk)}) is ${(ratio*100).toFixed(0)}% of standard initial margin (${fD(s.init*contracts)}).
+    ${ratio>1?'⚠ Scanning risk exceeds standard margin — extreme scenario coverage required.':ratio>0.75?'! Scanning risk is elevated relative to posted margin.':'✓ Scanning risk is within normal margin bounds.'}
+    Final SPAN-2 requirement of ${fD(finalMargin)} ${finalMargin>s.init*contracts?'exceeds':'is below'} the CME initial margin of ${fD(s.init*contracts)} for ${contracts} contract${contracts>1?'s':''}.
+    ${nov>0?` NOV credit of ${fD(nov)} reduces the gross requirement.`:''}`;
+
+  document.getElementById('g-results').style.display='block';
+  document.getElementById('g-placeholder').style.display='none';
+  document.getElementById('g-err').style.display='none';
+}
+
+// ===== UTILS =====
+function showErr(id,msg){const e=document.getElementById(id);e.textContent='! '+msg;e.style.display='block';}
+
+// ===== INIT =====
+buildGlossary();
+aOnTicker();
+</script>
+</body>
+</html>
