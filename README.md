@@ -128,19 +128,6 @@ Ensures capital preservation, controlled drawdowns, and disciplined trading beha
 
 ---
 
-## Future Enhancements
-
-- [ ] Portfolio-level risk aggregation
-- [ ] Multi-asset exposure dashboard
-- [ ] P&L sensitivity visualization
-- [ ] Margin breach alerts
-- [ ] Risk heatmaps
-- [ ] Downloadable trade risk reports
-- [ ] Advanced SPAN-style worst-case scenario tables
-- [ ] Dark / light trading terminal themes
-
----
-
 ## Author
 
 **Arham Shah** — Engineering Student, Financial Risk Analytics  
