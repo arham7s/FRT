@@ -131,7 +131,7 @@ Ensures capital preservation, controlled drawdowns, and disciplined trading beha
 ## **Project Architecture**
 
 Below is the overall system architecture of the Futures Risk Toolkit illustrating how user inputs flow through risk calculation modules, stress engine, and margin logic.
-![Project Architecture](./assets/project_architecture.png)
+![Project Architecture](./assets/Gemini_Generated_Image_72mq8672mq8672mq.png)
 
 ## Author
 
